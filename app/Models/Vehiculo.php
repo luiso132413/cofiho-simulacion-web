@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vehiculo extends Model
 {
@@ -88,4 +89,15 @@ class Vehiculo extends Model
             'id_moneda'
         );
     }
+
+    
+public function imagenes(): HasMany
+{
+    return $this->hasMany(
+        ImagenVehiculo::class,
+        'vehiculo_id_vehiculo',
+        'id_vehiculo'
+    );
+}
+
 }
