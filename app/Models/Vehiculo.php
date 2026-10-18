@@ -3,101 +3,56 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Vehiculo extends Model
 {
     protected $connection = 'oracle';
-
     protected $table = 'VEHICULO';
-
     protected $primaryKey = 'id_vehiculo';
 
     public $incrementing = false;
+    public $timestamps = false;
 
     protected $keyType = 'int';
-
-    public $timestamps = false;
 
     protected $fillable = [
         'vin',
         'motor',
         'placa',
         'anio',
-        'precio',
+        'id_modelo',
+        'id_tipo_vehiculo',
+        'color',
+        'condicion',
         'estado',
-        'estado_comercial',
-        'modelo_id_modelo',
-        'tipos_vehiculo_id_tipo',
-        'color_id_color',
-        'predio_id_predio',
-        'proveedor_id_proveedor',
-        'moneda_id_moneda',
+        'precio_lista',
+        'fecha_registro',
     ];
 
-    public function modelo(): BelongsTo
+    public function modelo()
     {
         return $this->belongsTo(
             Modelo::class,
-            'modelo_id_modelo',
+            'id_modelo',
             'id_modelo'
         );
     }
 
-    public function tipoVehiculo(): BelongsTo
+    public function tipoVehiculo()
     {
         return $this->belongsTo(
             TipoVehiculo::class,
-            'tipos_vehiculo_id_tipo',
-            'id_tipo'
+            'id_tipo_vehiculo',
+            'id_tipo_vehiculo'
         );
     }
 
-    public function color(): BelongsTo
+    public function inventarios()
     {
-        return $this->belongsTo(
-            Color::class,
-            'color_id_color',
-            'id_color'
+        return $this->hasMany(
+            InventarioPredio::class,
+            'id_vehiculo',
+            'id_vehiculo'
         );
     }
-
-    public function predio(): BelongsTo
-    {
-        return $this->belongsTo(
-            Predio::class,
-            'predio_id_predio',
-            'id_predio'
-        );
-    }
-
-    public function proveedor(): BelongsTo
-    {
-        return $this->belongsTo(
-            Proveedor::class,
-            'proveedor_id_proveedor',
-            'id_proveedor'
-        );
-    }
-
-    public function moneda(): BelongsTo
-    {
-        return $this->belongsTo(
-            Moneda::class,
-            'moneda_id_moneda',
-            'id_moneda'
-        );
-    }
-
-    
-public function imagenes(): HasMany
-{
-    return $this->hasMany(
-        ImagenVehiculo::class,
-        'vehiculo_id_vehiculo',
-        'id_vehiculo'
-    );
-}
-
 }

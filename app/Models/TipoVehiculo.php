@@ -3,33 +3,28 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class TipoVehiculo extends Model
 {
     protected $connection = 'oracle';
-
-    protected $table = 'TIPOS_VEHICULO';
-
-    protected $primaryKey = 'id_tipo';
+    protected $table = 'TIPO_VEHICULO';
+    protected $primaryKey = 'id_tipo_vehiculo';
 
     public $incrementing = false;
+    public $timestamps = false;
 
     protected $keyType = 'int';
 
-    public $timestamps = false;
-
     protected $fillable = [
-        'id_tipo',
         'nombre',
     ];
 
-    public function vehiculos(): HasMany
+    public function vehiculos()
     {
         return $this->hasMany(
             Vehiculo::class,
-            'tipos_vehiculo_id_tipo',
-            'id_tipo'
+            'id_tipo_vehiculo',
+            'id_tipo_vehiculo'
         );
     }
 }

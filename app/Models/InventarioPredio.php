@@ -10,41 +10,34 @@ class InventarioPredio extends Model
     protected $table = 'INVENTARIO_PREDIO';
     protected $primaryKey = 'id_inventario';
 
+    public $incrementing = false;
     public $timestamps = false;
 
+    protected $keyType = 'int';
+
     protected $fillable = [
-        'FECHA_INGRESO',
-        'FECHA_SALIDA',
-        'ESTADO',
-        'PREDIO_ID_PREDIO',
-        'UBICACION_ID_UBICACION',
-        'VEHICULO_ID_VEHICULO',
+        'id_vehiculo',
+        'id_predio',
+        'ubicacion',
+        'fecha_ingreso',
+        'fecha_salida',
     ];
 
+    public function vehiculo()
+    {
+        return $this->belongsTo(
+            Vehiculo::class,
+            'id_vehiculo',
+            'id_vehiculo'
+        );
+    }
+
     public function predio()
-{
-    return $this->belongsTo(
-        Predio::class,
-        'predio_id_predio',
-        'id_predio'
-    );
-}
-
-public function ubicacion()
-{
-    return $this->belongsTo(
-        Ubicacion::class,
-        'ubicacion_id_ubicacion',
-        'id_ubicacion'
-    );
-}
-
-public function vehiculo()
-{
-    return $this->belongsTo(
-        Vehiculo::class,
-        'vehiculo_id_vehiculo',
-        'id_vehiculo'
-    );
-}
+    {
+        return $this->belongsTo(
+            Predio::class,
+            'id_predio',
+            'id_predio'
+        );
+    }
 }

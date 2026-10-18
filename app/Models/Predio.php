@@ -3,54 +3,31 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Predio extends Model
 {
     protected $connection = 'oracle';
-
     protected $table = 'PREDIO';
-
     protected $primaryKey = 'id_predio';
 
     public $incrementing = false;
+    public $timestamps = false;
 
     protected $keyType = 'int';
 
-    public $timestamps = false;
-
     protected $fillable = [
-        'id_predio',
         'nombre',
         'direccion',
         'tipo',
-        'capacidad',
+        'activo',
     ];
 
-    public function vehiculos(): HasMany
+    public function inventarios()
     {
         return $this->hasMany(
-            Vehiculo::class,
-            'predio_id_predio',
+            InventarioPredio::class,
+            'id_predio',
             'id_predio'
         );
     }
-
-    public function ubicaciones()
-{
-    return $this->hasMany(
-        Ubicacion::class,
-        'predio_id_predio',
-        'id_predio'
-    );
-}
-
-public function inventarios()
-{
-    return $this->hasMany(
-        InventarioPredio::class,
-        'predio_id_predio',
-        'id_predio'
-    );
-}
 }
