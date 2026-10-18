@@ -26,12 +26,14 @@ class FinanzaController extends Controller
     }
 
     public function detalles($id)
-    {
-        $detalles = DetalleFinanciero::where(
-            'id_transaccion',
-            $id
-        )->get();
+{
+    $transaccion = TransaccionFinanciera::findOrFail($id);
 
-        return view('finanzas.detalles', compact('detalles'));
-    }
+    $detalles = DetalleFinanciero::where(
+        'id_venta',
+        $transaccion->id_venta
+    )->get();
+
+    return view('finanzas.detalles', compact('detalles'));
+}
 }
