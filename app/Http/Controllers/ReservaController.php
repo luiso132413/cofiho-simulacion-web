@@ -21,7 +21,19 @@ class ReservaController extends Controller
     {
         $reserva = Reserva::findOrFail($id);
 
-        return view('reservas.show', compact('reserva'));
+        $totales = \Illuminate\Support\Facades\DB::connection('oracle')
+            ->table('TRANSACCION_FINANCIERA')
+            ->where('ID_RESERVA', $id)
+            ->selectRaw("SUM(CASE WHEN TIPO = 'ENGANCHE' AND ESTADO = 'APROBADA' THEN MONTO ELSE 0 END) AS TOTAL_ENGANCHES")
+            ->selectRaw("SUM(CASE WHEN TIPO = 'DEVOLUCION' AND ESTADO IN ('PENDIENTE', 'APROBADA') THEN MONTO ELSE 0 END) AS TOTAL_DEVOLUCIONES")
+            ->first();
+
+        $saldoDevolucion = max(0, round(
+            (float) ($totales->total_enganches ?? 0)
+            - (float) ($totales->total_devoluciones ?? 0), 2
+        ));
+
+        return view('reservas.show', compact('reserva', 'saldoDevolucion'));
     }
 
     public function store(Request $request, ReservaService $reservaService)
@@ -92,4 +104,118 @@ class ReservaController extends Controller
                 ]);
         }
     }
+
+    public function registrarEnganche(
+    Request $request,
+    ReservaService $reservaService,
+    $id
+) {
+    $datos = $request->validate([
+        'id_metodo_pago' => 'required|integer|min:1',
+        'monto' => 'required|numeric|gt:0',
+        'referencia' => 'required|string|max:100',
+    ]);
+
+    try {
+        $reservaService->registrarEnganche(
+            (int) $id,
+            (int) $datos['id_metodo_pago'],
+            (float) $datos['monto'],
+            trim($datos['referencia'])
+        );
+
+        return redirect()
+            ->route('reservas.show', $id)
+            ->with('success', 'Enganche registrado correctamente.');
+
+    } catch (Throwable $e) {
+        report($e);
+
+        return back()
+            ->withInput()
+            ->withErrors([
+                'enganche' => 'No fue posible registrar el enganche. Verifica que la reserva esté vigente y que la referencia no esté duplicada.',
+            ]);
+    }
+}
+
+    public function registrarDevolucion(
+        Request $request,
+        ReservaService $reservaService,
+        $id
+    ) {
+        $datos = $request->validate([
+            'id_metodo_pago' => 'required|integer|min:1',
+            'monto' => 'required|numeric|gt:0',
+            'referencia' => 'required|string|max:120',
+        ]);
+
+        try {
+            $reservaService->registrarDevolucion(
+                (int) $id,
+                (int) $datos['id_metodo_pago'],
+                (float) $datos['monto'],
+                trim($datos['referencia'])
+            );
+
+            return redirect()
+                ->route('reservas.show', $id)
+                ->with('success', 'Devolución registrada correctamente.');
+        } catch (Throwable $e) {
+            report($e);
+
+            return back()
+                ->withInput()
+                ->withErrors([
+                    'devolucion' => 'No fue posible registrar la devolución. Verifica el estado de la reserva, el saldo disponible y la referencia.',
+                ]);
+        }
+    }
+
+    
+public function checkout(Request $request, ReservaService $reservaService)
+{
+    $datos = $request->validate([
+        'id_cliente' => 'required|integer|min:1',
+        'id_vehiculo' => 'required|integer|min:1',
+        'id_usuario' => 'nullable|integer|min:1',
+        'canal' => 'required|string|max:50',
+        'id_metodo_pago' => 'required|integer|min:1',
+        'monto_enganche' => 'required|numeric|gt:0',
+        'referencia' => 'required|string|max:120',
+    ]);
+
+    try {
+        $resultado = $reservaService->checkoutReserva(
+            (int) $datos['id_cliente'],
+            (int) $datos['id_vehiculo'],
+            isset($datos['id_usuario'])
+                ? (int) $datos['id_usuario']
+                : null,
+            $datos['canal'],
+            (int) $datos['id_metodo_pago'],
+            (float) $datos['monto_enganche'],
+            trim($datos['referencia'])
+        );
+
+        return redirect()
+            ->route('reservas.show', $resultado['id_reserva'])
+            ->with(
+                'success',
+                "Reserva {$resultado['id_reserva']} creada. " .
+                "Enganche registrado y gastos calculados: Q" .
+                number_format($resultado['gastos'], 2)
+            );
+    } catch (Throwable $e) {
+        report($e);
+
+        return back()
+            ->withInput()
+            ->withErrors([
+                'checkout' => 'No fue posible completar el checkout. Verifica los datos y vuelve a intentarlo.',
+            ]);
+    }
+}
+
+
 }

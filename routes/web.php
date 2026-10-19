@@ -44,11 +44,20 @@ Route::get('/usuarios/{id}', [UsuarioController::class, 'show'])
 Route::get('/reservas', [ReservaController::class, 'index'])
     ->name('reservas.index');
 
+    Route::post('/reservas/checkout', [ReservaController::class, 'checkout'])
+    ->name('reservas.checkout');
+
 Route::post('/reservas', [ReservaController::class, 'store'])
     ->name('reservas.store');
 
 Route::post('/reservas/fifo', [ReservaController::class, 'storeFIFO'])
     ->name('reservas.fifo');
+
+Route::post('/reservas/{id}/enganche', [ReservaController::class, 'registrarEnganche'])
+->name('reservas.enganche');
+
+Route::post('/reservas/{id}/devolucion', [ReservaController::class, 'registrarDevolucion'])
+    ->name('reservas.devolucion');
 
 Route::get('/reservas/{id}', [ReservaController::class, 'show'])
     ->name('reservas.show');
@@ -73,12 +82,20 @@ Route::get('/finanzas/{id}/detalles', [FinanzaController::class, 'detalles'])
 Route::get('/finanzas/{id}', [FinanzaController::class, 'show'])
     ->name('finanzas.show');
 
-// Inspecciones
+
+ // Inspecciones
 Route::get('/inspecciones', [InspeccionController::class, 'index'])
     ->name('inspecciones.index');
 
+Route::post('/inspecciones', [InspeccionController::class, 'store'])
+    ->name('inspecciones.store');
+
+Route::post('/inspecciones/avaluos', [InspeccionController::class, 'storeAvaluo'])
+    ->name('inspecciones.avaluos.store');
+
 Route::get('/inspecciones/{id}', [InspeccionController::class, 'show'])
     ->name('inspecciones.show');
+
 
 // Reportes
 Route::get('/reportes', [ReporteController::class, 'index'])

@@ -20,20 +20,24 @@ class VentaController extends Controller
         return view('ventas.index', compact('ventas'));
     }
 
-    public function show($id)
-    {
-        $venta = Venta::with('detalles')
-            ->findOrFail($id);
+   public function show($id)
+{
+    $venta = Venta::with([
+        'detalles',
+        'reserva',
+        'transacciones',
+        'detallesFinancieros',
+    ])->findOrFail($id);
 
-        return view('ventas.show', compact('venta'));
-    }
+    return view('ventas.show', compact('venta'));
+}
 
     public function store(Request $request, VentaService $ventaService)
     {
         $datos = $request->validate([
             'id_cliente' => 'required|integer|min:1',
             'id_vehiculo' => 'required|integer|min:1',
-            'id_usuario' => 'nullable|integer|min:1',
+            'id_usuario' => 'required|integer|min:1|exists:oracle.USUARIO,ID_USUARIO',
             'id_metodo_pago' => 'required|integer|min:1',
             'id_reserva' => 'nullable|integer|min:1',
         ]);

@@ -140,6 +140,71 @@
 
 </div>
 
+<div class="card" style="margin-top:20px;">
+    <h2>Registrar avalúo del vehículo</h2>
+
+    @if(session('success'))
+        <p style="color:green;">{{ session('success') }}</p>
+    @endif
+
+    @if($errors->any())
+        <div style="color:#b91c1c; margin-bottom:15px;">
+            @foreach($errors->all() as $error)
+                <p>{{ $error }}</p>
+            @endforeach
+        </div>
+    @endif
+
+    <form method="POST" action="{{ route('inspecciones.avaluos.store') }}">
+        @csrf
+        <input type="hidden" name="id_inspeccion" value="{{ $inspeccion->id_inspeccion }}">
+
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:15px;">
+            <div>
+                <label for="id_usuario_avaluo">ID del inspector</label>
+                <input id="id_usuario_avaluo" type="number" name="id_usuario"
+                       value="{{ old('id_usuario', 3) }}" min="1" required
+                       style="width:100%; padding:10px;">
+            </div>
+            <div>
+                <label for="valor_estimado">Valor estimado (Q)</label>
+                <input id="valor_estimado" type="number" name="valor_estimado"
+                       value="{{ old('valor_estimado') }}" min="0" step="0.01" required
+                       style="width:100%; padding:10px;">
+            </div>
+            <div>
+                <label for="estado_avaluo">Estado del avalúo</label>
+                <select id="estado_avaluo" name="estado" required
+                        style="width:100%; padding:10px;">
+                    @foreach(['PENDIENTE', 'APROBADO', 'RECHAZADO'] as $estado)
+                        <option value="{{ $estado }}"
+                            @selected(old('estado', 'PENDIENTE') === $estado)>
+                            {{ $estado }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+        </div>
+
+        <div style="margin-top:15px;">
+            <label for="observaciones_avaluo">Observaciones del avalúo</label>
+            <textarea id="observaciones_avaluo" name="observaciones" rows="3"
+                      style="width:100%; padding:10px;">{{ old('observaciones') }}</textarea>
+        </div>
+
+        @if($inspeccion->resultado !== 'APROBADA')
+            <p style="margin-top:15px; color:#b45309;">
+                La inspección no está aprobada. Solo se puede registrar
+                un avalúo pendiente o rechazado.
+            </p>
+        @endif
+
+        <button type="submit" class="btn" style="margin-top:15px;">
+            Registrar avalúo
+        </button>
+    </form>
+</div>
+
 <div style="margin-top:15px;">
     <a href="{{ route('inspecciones.index') }}" class="btn">
         Volver a Inspecciones

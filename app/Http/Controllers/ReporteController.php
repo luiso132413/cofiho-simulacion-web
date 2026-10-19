@@ -32,15 +32,39 @@ class ReporteController extends Controller
         );
     }
 
-    public function antiguedadInventario()
-    {
-        $inventario = DB::connection('oracle')
-            ->table('V_REPORTE_ANTIGUEDAD')
-            ->get();
+    
+public function antiguedadInventario()
+{
+    $inventario = DB::connection('oracle')
+        ->table('V_REPORTE_ANTIGUEDAD')
+        ->get();
 
-        return view(
-            'reportes.antiguedad_inventario',
-            compact('inventario')
-        );
-    }
+    $predios = DB::connection('oracle')
+        ->table('PREDIO')
+        ->select('ID_PREDIO', 'NOMBRE')
+        ->get()
+        ->keyBy('id_predio');
+
+    $resumenPredios = $inventario
+        ->groupBy('id_predio')
+        ->map(function ($vehiculos, $idPredio) use ($predios) {
+            return [
+                'predio' => $predios->get($idPredio)->nombre
+                    ?? 'Predio ' . $idPredio,
+                'dias_0_30' => $vehiculos->where('rango_antiguedad', '0-30 DIAS')->count(),
+                'dias_31_60' => $vehiculos->where('rango_antiguedad', '31-60 DIAS')->count(),
+                'dias_61_90' => $vehiculos->where('rango_antiguedad', '61-90 DIAS')->count(),
+                'dias_mas_90' => $vehiculos->where('rango_antiguedad', 'MAS DE 90 DIAS')->count(),
+                'total' => $vehiculos->count(),
+                'valor' => $vehiculos->sum('precio_lista'),
+            ];
+        })
+        ->values();
+
+    return view(
+        'reportes.antiguedad_inventario',
+        compact('inventario', 'resumenPredios')
+    );
+}
+
 }
