@@ -19,9 +19,12 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Vehículos
-Route::get('/vehiculos', [VehiculoController::class, 'index'])
-    ->name('vehiculos.index');
+// Rutas protegidas
+Route::middleware('auth')->group(function () {
+
+    // Vehículos
+    Route::get('/vehiculos', [VehiculoController::class, 'index'])
+        ->name('vehiculos.index');
 
 // Inventario
 Route::get('/inventario', [InventarioController::class, 'index'])
@@ -34,12 +37,14 @@ Route::get('/clientes', [ClienteController::class, 'index'])
 Route::get('/clientes/{id}', [ClienteController::class, 'show'])
     ->name('clientes.show');
 
-// Usuarios
-Route::get('/usuarios', [UsuarioController::class, 'index'])
-    ->name('usuarios.index');
+// Usuarios - Solo ADMINISTRADOR
+Route::middleware('rol:ADMINISTRADOR')->group(function () {
+    Route::get('/usuarios', [UsuarioController::class, 'index'])
+        ->name('usuarios.index');
 
-Route::get('/usuarios/{id}', [UsuarioController::class, 'show'])
-    ->name('usuarios.show');
+    Route::get('/usuarios/{id}', [UsuarioController::class, 'show'])
+        ->name('usuarios.show');
+});
 
 // Reservas
 Route::get('/reservas', [ReservaController::class, 'index'])
@@ -110,6 +115,8 @@ Route::get('/reportes/conciliacion', [ReporteController::class, 'conciliacionFin
 
 Route::get('/reportes/antiguedad', [ReporteController::class, 'antiguedadInventario'])
     ->name('reportes.antiguedad');
+
+}); // Fin de rutas protegidas
 
     // Autenticación
 Route::middleware('guest')->group(function () {

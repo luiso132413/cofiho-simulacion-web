@@ -26,6 +26,12 @@
             </thead>
 
             <tbody>
+                <form action="{{ route('logout') }}" method="POST" style="text-align: right; padding: 15px;">
+    @csrf
+    <button type="submit" style="padding: 10px 20px; cursor: pointer;">
+        Cerrar sesión
+    </button>
+</form>
                 @forelse($vehiculos as $vehiculo)
                     <tr>
                         <td>{{ $vehiculo->id_vehiculo }}</td>
