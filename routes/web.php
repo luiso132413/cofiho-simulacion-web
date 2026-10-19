@@ -12,6 +12,7 @@ use App\Http\Controllers\VentaController;
 use App\Http\Controllers\FinanzaController;
 use App\Http\Controllers\InspeccionController;
 use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\AuthController;
 
 // Inicio
 Route::get('/', function () {
@@ -109,3 +110,16 @@ Route::get('/reportes/conciliacion', [ReporteController::class, 'conciliacionFin
 
 Route::get('/reportes/antiguedad', [ReporteController::class, 'antiguedadInventario'])
     ->name('reportes.antiguedad');
+
+    // Autenticación
+Route::middleware('guest')->group(function () {
+    Route::get('/login', [AuthController::class, 'showLogin'])
+        ->name('login');
+
+    Route::post('/login', [AuthController::class, 'login'])
+        ->name('login.submit');
+});
+
+Route::post('/logout', [AuthController::class, 'logout'])
+    ->middleware('auth')
+    ->name('logout');
