@@ -45,12 +45,12 @@
                     style="width:100%;padding:10px;margin-top:6px;">
             </div>
 
-            <div>
+            <!-- <div>
                 <label for="checkout_usuario">ID Usuario (opcional)</label>
                 <input type="number" id="checkout_usuario" name="id_usuario"
                     value="{{ old('id_usuario') }}" min="1"
                     style="width:100%;padding:10px;margin-top:6px;">
-            </div>
+            </div> -->
 
             <div>
                 <label for="checkout_canal">Canal</label>
@@ -118,12 +118,12 @@
                     style="width:100%;padding:10px;margin-top:6px;">
             </div>
 
-            <div>
+            <!-- <div>
                 <label for="id_usuario">ID Usuario (opcional)</label>
                 <input type="number" id="id_usuario" name="id_usuario"
                     value="{{ old('id_usuario') }}" min="1"
                     style="width:100%;padding:10px;margin-top:6px;">
-            </div>
+            </div> -->
 
             <div>
                 <label for="canal">Canal</label>
@@ -171,12 +171,12 @@
                     style="width:100%;padding:10px;margin-top:6px;">
             </div>
 
-            <div>
+            <!-- <div>
                 <label for="fifo_usuario">ID Usuario (opcional)</label>
                 <input type="number" id="fifo_usuario" name="id_usuario"
                     min="1"
                     style="width:100%;padding:10px;margin-top:6px;">
-            </div>
+            </div> -->
 
             <div>
                 <label for="fifo_canal">Canal</label>

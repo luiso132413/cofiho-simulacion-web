@@ -21,22 +21,31 @@ Route::get('/', function () {
 
 // Rutas protegidas
 Route::middleware('auth')->group(function () {
+// Vehículos - Todos los roles
+Route::middleware('rol:ADMINISTRADOR,VENDEDOR,INSPECTOR')->group(function () {
 
-    // Vehículos
     Route::get('/vehiculos', [VehiculoController::class, 'index'])
         ->name('vehiculos.index');
 
-// Inventario
-Route::get('/inventario', [InventarioController::class, 'index'])
-    ->name('inventario.index');
+});
+// Inventario - Todos los roles
+Route::middleware('rol:ADMINISTRADOR,VENDEDOR,INSPECTOR')->group(function () {
 
-// Clientes
-Route::get('/clientes', [ClienteController::class, 'index'])
-    ->name('clientes.index');
+    Route::get('/inventario', [InventarioController::class, 'index'])
+        ->name('inventario.index');
 
-Route::get('/clientes/{id}', [ClienteController::class, 'show'])
-    ->name('clientes.show');
+});
 
+// Clientes - ADMINISTRADOR y VENDEDOR
+Route::middleware('rol:ADMINISTRADOR,VENDEDOR')->group(function () {
+
+    Route::get('/clientes', [ClienteController::class, 'index'])
+        ->name('clientes.index');
+
+    Route::get('/clientes/{id}', [ClienteController::class, 'show'])
+        ->name('clientes.show');
+
+});
 // Usuarios - Solo ADMINISTRADOR
 Route::middleware('rol:ADMINISTRADOR')->group(function () {
     Route::get('/usuarios', [UsuarioController::class, 'index'])
@@ -47,6 +56,8 @@ Route::middleware('rol:ADMINISTRADOR')->group(function () {
 });
 
 // Reservas
+
+Route::middleware('rol:ADMINISTRADOR,VENDEDOR')->group(function () {
 Route::get('/reservas', [ReservaController::class, 'index'])
     ->name('reservas.index');
 
@@ -68,7 +79,13 @@ Route::post('/reservas/{id}/devolucion', [ReservaController::class, 'registrarDe
 Route::get('/reservas/{id}', [ReservaController::class, 'show'])
     ->name('reservas.show');
 
+    Route::get('/reservas/{id}', [ReservaController::class, 'show'])
+    ->name('reservas.show');
+    }); // Fin de permisos de Reservas
+
 // Ventas
+
+Route::middleware('rol:ADMINISTRADOR,VENDEDOR')->group(function () {
 Route::get('/ventas', [VentaController::class, 'index'])
     ->name('ventas.index');
 
@@ -77,8 +94,11 @@ Route::post('/ventas', [VentaController::class, 'store'])
 
 Route::get('/ventas/{id}', [VentaController::class, 'show'])
     ->name('ventas.show');
+}); // Fin de permisos de Ventas
 
 // Finanzas
+Route::middleware('rol:ADMINISTRADOR')->group(function () {
+
 Route::get('/finanzas', [FinanzaController::class, 'index'])
     ->name('finanzas.index');
 
@@ -88,33 +108,46 @@ Route::get('/finanzas/{id}/detalles', [FinanzaController::class, 'detalles'])
 Route::get('/finanzas/{id}', [FinanzaController::class, 'show'])
     ->name('finanzas.show');
 
+Route::get('/ventas/{id}', [VentaController::class, 'show'])
+    ->name('ventas.show');
 
- // Inspecciones
-Route::get('/inspecciones', [InspeccionController::class, 'index'])
-    ->name('inspecciones.index');
+    Route::get('/finanzas/{id}', [FinanzaController::class, 'show'])
+    ->name('finanzas.show');
+}); // Fin de permisos de Finanzas
 
-Route::post('/inspecciones', [InspeccionController::class, 'store'])
-    ->name('inspecciones.store');
+ // Inspecciones - ADMINISTRADOR e INSPECTOR
+Route::middleware('rol:ADMINISTRADOR,INSPECTOR')->group(function () {
 
-Route::post('/inspecciones/avaluos', [InspeccionController::class, 'storeAvaluo'])
-    ->name('inspecciones.avaluos.store');
+    Route::get('/inspecciones', [InspeccionController::class, 'index'])
+        ->name('inspecciones.index');
 
-Route::get('/inspecciones/{id}', [InspeccionController::class, 'show'])
-    ->name('inspecciones.show');
+    Route::post('/inspecciones', [InspeccionController::class, 'store'])
+        ->name('inspecciones.store');
 
+    Route::post('/inspecciones/avaluos', [InspeccionController::class, 'storeAvaluo'])
+        ->name('inspecciones.avaluos.store');
 
-// Reportes
-Route::get('/reportes', [ReporteController::class, 'index'])
-    ->name('reportes.index');
+    Route::get('/inspecciones/{id}', [InspeccionController::class, 'show'])
+        ->name('inspecciones.show');
 
-Route::get('/reportes/fifo', [ReporteController::class, 'inventarioFIFO'])
-    ->name('reportes.fifo');
+}); // Fin de permisos de Inspecciones
 
-Route::get('/reportes/conciliacion', [ReporteController::class, 'conciliacionFinanciera'])
-    ->name('reportes.conciliacion');
+// Reportes - Solo ADMINISTRADOR
+Route::middleware('rol:ADMINISTRADOR')->group(function () {
 
-Route::get('/reportes/antiguedad', [ReporteController::class, 'antiguedadInventario'])
-    ->name('reportes.antiguedad');
+    Route::get('/reportes', [ReporteController::class, 'index'])
+        ->name('reportes.index');
+
+    Route::get('/reportes/fifo', [ReporteController::class, 'inventarioFIFO'])
+        ->name('reportes.fifo');
+
+    Route::get('/reportes/conciliacion', [ReporteController::class, 'conciliacionFinanciera'])
+        ->name('reportes.conciliacion');
+
+    Route::get('/reportes/antiguedad', [ReporteController::class, 'antiguedadInventario'])
+        ->name('reportes.antiguedad');
+
+}); // Fin de permisos de Reportes
 
 }); // Fin de rutas protegidas
 
@@ -130,3 +163,5 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth')
     ->name('logout');
+
+   

@@ -41,7 +41,7 @@ class ReservaController extends Controller
         $datos = $request->validate([
             'id_cliente' => 'required|integer|min:1',
             'id_vehiculo' => 'required|integer|min:1',
-            'id_usuario' => 'nullable|integer|min:1',
+            
             'canal' => 'required|string|max:50',
         ]);
 
@@ -49,9 +49,7 @@ class ReservaController extends Controller
             $idReserva = $reservaService->crearReserva(
                 (int) $datos['id_cliente'],
                 (int) $datos['id_vehiculo'],
-                isset($datos['id_usuario'])
-                    ? (int) $datos['id_usuario']
-                    : null,
+                (int) $request->user()->id_usuario,
                 $datos['canal']
             );
 
@@ -74,7 +72,7 @@ class ReservaController extends Controller
         $datos = $request->validate([
             'id_predio' => 'required|integer|min:1',
             'id_cliente' => 'required|integer|min:1',
-            'id_usuario' => 'nullable|integer|min:1',
+            
             'canal' => 'required|string|max:50',
         ]);
 
@@ -82,9 +80,7 @@ class ReservaController extends Controller
             $resultado = $reservaService->reservarFIFO(
                 (int) $datos['id_predio'],
                 (int) $datos['id_cliente'],
-                isset($datos['id_usuario'])
-                    ? (int) $datos['id_usuario']
-                    : null,
+                (int) $request->user()->id_usuario,
                 $datos['canal']
             );
 
@@ -178,7 +174,7 @@ public function checkout(Request $request, ReservaService $reservaService)
     $datos = $request->validate([
         'id_cliente' => 'required|integer|min:1',
         'id_vehiculo' => 'required|integer|min:1',
-        'id_usuario' => 'nullable|integer|min:1',
+        
         'canal' => 'required|string|max:50',
         'id_metodo_pago' => 'required|integer|min:1',
         'monto_enganche' => 'required|numeric|gt:0',
@@ -189,9 +185,7 @@ public function checkout(Request $request, ReservaService $reservaService)
         $resultado = $reservaService->checkoutReserva(
             (int) $datos['id_cliente'],
             (int) $datos['id_vehiculo'],
-            isset($datos['id_usuario'])
-                ? (int) $datos['id_usuario']
-                : null,
+            (int) $request->user()->id_usuario,
             $datos['canal'],
             (int) $datos['id_metodo_pago'],
             (float) $datos['monto_enganche'],
