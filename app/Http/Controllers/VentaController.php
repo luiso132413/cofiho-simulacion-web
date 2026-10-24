@@ -6,6 +6,7 @@ use App\Models\Venta;
 use App\Services\VentaService;
 use Illuminate\Http\Request;
 use Throwable;
+use Illuminate\Support\Facades\Auth;
 
 class VentaController extends Controller
 {
@@ -37,7 +38,7 @@ class VentaController extends Controller
         $datos = $request->validate([
             'id_cliente' => 'required|integer|min:1',
             'id_vehiculo' => 'required|integer|min:1',
-            'id_usuario' => 'required|integer|min:1|exists:oracle.USUARIO,ID_USUARIO',
+            // 'id_usuario' => 'required|integer|min:1|exists:oracle.USUARIO,ID_USUARIO',
             'id_metodo_pago' => 'required|integer|min:1',
             'id_reserva' => 'nullable|integer|min:1',
         ]);
@@ -46,9 +47,7 @@ class VentaController extends Controller
             $idVenta = $ventaService->procesarVenta(
                 (int) $datos['id_cliente'],
                 (int) $datos['id_vehiculo'],
-                isset($datos['id_usuario'])
-                    ? (int) $datos['id_usuario']
-                    : null,
+                (int) Auth::user()->id_usuario,
                 (int) $datos['id_metodo_pago'],
                 isset($datos['id_reserva'])
                     ? (int) $datos['id_reserva']

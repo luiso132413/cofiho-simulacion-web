@@ -42,12 +42,12 @@
                        style="width:100%; padding:10px; margin-top:5px;">
             </div>
 
-            <div>
+            <!-- <div>
     <label for="id_usuario">ID Usuario (obligatorio)</label>
     <input type="number" id="id_usuario" name="id_usuario"
            value="{{ old('id_usuario') }}" min="1" required
            style="width:100%; padding:10px; margin-top:5px;">
-</div>
+</div> -->
 
             <div>
                 <label for="id_metodo_pago">ID Método de Pago</label>

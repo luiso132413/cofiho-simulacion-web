@@ -108,9 +108,6 @@ Route::get('/finanzas/{id}/detalles', [FinanzaController::class, 'detalles'])
 Route::get('/finanzas/{id}', [FinanzaController::class, 'show'])
     ->name('finanzas.show');
 
-Route::get('/ventas/{id}', [VentaController::class, 'show'])
-    ->name('ventas.show');
-
     Route::get('/finanzas/{id}', [FinanzaController::class, 'show'])
     ->name('finanzas.show');
 }); // Fin de permisos de Finanzas
