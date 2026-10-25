@@ -26,4 +26,8 @@ class Cliente extends Model
         'direccion',
         'fecha_registro',
     ];
+
+    protected $casts = [
+        'activo' => 'integer',
+    ];
 }

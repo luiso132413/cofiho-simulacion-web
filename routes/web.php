@@ -36,16 +36,34 @@ Route::middleware('rol:ADMINISTRADOR,VENDEDOR,INSPECTOR')->group(function () {
 
 });
 
+
 // Clientes - ADMINISTRADOR y VENDEDOR
 Route::middleware('rol:ADMINISTRADOR,VENDEDOR')->group(function () {
 
+    // Listado de clientes
     Route::get('/clientes', [ClienteController::class, 'index'])
         ->name('clientes.index');
 
+    // Formulario para editar cliente
+    Route::get('/clientes/{id}/edit', [ClienteController::class, 'edit'])
+        ->name('clientes.edit');
+
+    // Actualizar información del cliente
+    Route::put('/clientes/{id}', [ClienteController::class, 'update'])
+        ->name('clientes.update');
+
+    // Consultar detalles del cliente
     Route::get('/clientes/{id}', [ClienteController::class, 'show'])
         ->name('clientes.show');
 
+        
+// Activar o desactivar cliente
+Route::patch('/clientes/{id}/estado', [ClienteController::class, 'toggleEstado'])
+    ->name('clientes.estado');
+
+
 });
+
 // Usuarios - Solo ADMINISTRADOR
 Route::middleware('rol:ADMINISTRADOR')->group(function () {
 

@@ -71,8 +71,20 @@
 
 </div>
 
-<div class="card">
+<div class="card" style="margin-bottom:20px;">
 
+    <h2>Distribución de Antigüedad del Inventario</h2>
+
+    <p style="color:#64748b; margin-bottom:20px;">
+        Cantidad de vehículos según el tiempo que llevan
+        registrados en el inventario.
+    </p>
+
+    <div style="position:relative; height:320px;">
+        <canvas id="graficaAntiguedad"></canvas>
+    </div>
+
+</div>
 
 <div class="card" style="margin-bottom:20px;">
 
@@ -224,5 +236,56 @@
         Volver a Reportes
     </a>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const canvas = document.getElementById('graficaAntiguedad');
+
+    if (!canvas || typeof Chart === 'undefined') {
+        return;
+    }
+
+    new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: [
+                'Normal (0-60 días)',
+                'Alerta (61-90 días)',
+                'Crítica (+90 días)'
+            ],
+            datasets: [{
+                label: 'Cantidad de vehículos',
+                data: [
+                    @json($normal),
+                    @json($alerta60),
+                    @json($alerta90)
+                ],
+                backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'],
+                borderRadius: 6,
+                maxBarThickness: 90
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 },
+                    title: {
+                        display: true,
+                        text: 'Cantidad de vehículos'
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
 
 @endsection

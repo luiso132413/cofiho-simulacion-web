@@ -3,42 +3,55 @@
 namespace App\Http\Controllers;
 
 use App\Models\Venta;
+use App\Models\Cliente;
 use App\Services\VentaService;
 use Illuminate\Http\Request;
-use Throwable;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
+use Throwable;
 
 class VentaController extends Controller
 {
     public function index()
     {
+        // Obtener todas las ventas, incluyendo las de clientes inactivos.
         $ventas = Venta::with([
             'detalles',
         ])
         ->orderBy('id_venta', 'desc')
         ->get();
 
-        return view('ventas.index', compact('ventas'));
+        // Obtener únicamente clientes activos para nuevas ventas.
+        $clientes = Cliente::where('activo', 1)
+            ->orderBy('nombre')
+            ->orderBy('apellido')
+            ->get();
+
+        return view('ventas.index', compact('ventas', 'clientes'));
     }
 
-   public function show($id)
-{
-    $venta = Venta::with([
-        'detalles',
-        'reserva',
-        'transacciones',
-        'detallesFinancieros',
-    ])->findOrFail($id);
+    public function show($id)
+    {
+        $venta = Venta::with([
+            'detalles',
+            'reserva',
+            'transacciones',
+            'detallesFinancieros',
+        ])->findOrFail($id);
 
-    return view('ventas.show', compact('venta'));
-}
+        return view('ventas.show', compact('venta'));
+    }
 
     public function store(Request $request, VentaService $ventaService)
     {
         $datos = $request->validate([
-            'id_cliente' => 'required|integer|min:1',
+            'id_cliente' => [
+                'required',
+                'integer',
+                Rule::exists('oracle.CLIENTE', 'ID_CLIENTE')
+                    ->where('ACTIVO', 1),
+            ],
             'id_vehiculo' => 'required|integer|min:1',
-            // 'id_usuario' => 'required|integer|min:1|exists:oracle.USUARIO,ID_USUARIO',
             'id_metodo_pago' => 'required|integer|min:1',
             'id_reserva' => 'nullable|integer|min:1',
         ]);
@@ -60,6 +73,7 @@ class VentaController extends Controller
                     'success',
                     "Venta {$idVenta} procesada correctamente."
                 );
+
         } catch (Throwable $e) {
             report($e);
 

@@ -29,44 +29,67 @@
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:15px;">
 
             <div>
-                <label for="id_cliente">ID Cliente</label>
-                <input type="number" id="id_cliente" name="id_cliente"
-                       value="{{ old('id_cliente') }}" min="1" required
-                       style="width:100%; padding:10px; margin-top:5px;">
+                <label for="id_cliente">Cliente</label>
+
+                <select
+                    id="id_cliente"
+                    name="id_cliente"
+                    required
+                    style="width:100%; padding:10px; margin-top:5px;"
+                >
+                    <option value="">Seleccione un cliente</option>
+
+                    @foreach($clientes as $cliente)
+                        <option
+                            value="{{ $cliente->id_cliente }}"
+                            {{ old('id_cliente') == $cliente->id_cliente ? 'selected' : '' }}
+                        >
+                            {{ $cliente->id_cliente }} -
+                            {{ $cliente->nombre }}
+                            {{ $cliente->apellido }}
+                        </option>
+                    @endforeach
+
+                </select>
             </div>
 
             <div>
                 <label for="id_vehiculo">ID Vehículo</label>
-                <input type="number" id="id_vehiculo" name="id_vehiculo"
-                       value="{{ old('id_vehiculo') }}" min="1" required
+                <input type="number"
+                       id="id_vehiculo"
+                       name="id_vehiculo"
+                       value="{{ old('id_vehiculo') }}"
+                       min="1"
+                       required
                        style="width:100%; padding:10px; margin-top:5px;">
             </div>
 
-            <!-- <div>
-    <label for="id_usuario">ID Usuario (obligatorio)</label>
-    <input type="number" id="id_usuario" name="id_usuario"
-           value="{{ old('id_usuario') }}" min="1" required
-           style="width:100%; padding:10px; margin-top:5px;">
-</div> -->
-
             <div>
                 <label for="id_metodo_pago">ID Método de Pago</label>
-                <input type="number" id="id_metodo_pago" name="id_metodo_pago"
-                       value="{{ old('id_metodo_pago') }}" min="1" required
+                <input type="number"
+                       id="id_metodo_pago"
+                       name="id_metodo_pago"
+                       value="{{ old('id_metodo_pago') }}"
+                       min="1"
+                       required
                        style="width:100%; padding:10px; margin-top:5px;">
             </div>
 
             <div>
                 <label for="id_reserva">ID Reserva (opcional)</label>
-                <input type="number" id="id_reserva" name="id_reserva"
-                       value="{{ old('id_reserva') }}" min="1"
+                <input type="number"
+                       id="id_reserva"
+                       name="id_reserva"
+                       value="{{ old('id_reserva') }}"
+                       min="1"
                        style="width:100%; padding:10px; margin-top:5px;">
             </div>
 
         </div>
 
         <div style="margin-top:20px;">
-            <button type="submit" class="btn"
+            <button type="submit"
+                    class="btn"
                     onclick="return confirm('¿Deseas procesar esta venta? Esta operación registrará cambios en Oracle.');">
                 Procesar Venta
             </button>
@@ -90,7 +113,7 @@
                     <th>Fecha</th>
                     <th>Total</th>
                     <th>Estado</th>
-                    <th>Acciones</th>
+                    <th>Detalle</th>
                 </tr>
             </thead>
 
@@ -101,16 +124,19 @@
                         <td>{{ $venta->id_cliente }}</td>
                         <td>{{ $venta->id_usuario ?? 'No asignado' }}</td>
                         <td>{{ $venta->fecha_venta ?? 'No registrada' }}</td>
+
                         <td>
                             {{ $venta->total !== null
                                 ? 'Q ' . number_format((float) $venta->total, 2)
                                 : 'No disponible' }}
                         </td>
+
                         <td>{{ $venta->estado ?? 'No definido' }}</td>
+
                         <td>
                             <a href="{{ route('ventas.show', $venta->id_venta) }}"
                                class="btn">
-                                Ver detalles
+                                Ver
                             </a>
                         </td>
                     </tr>

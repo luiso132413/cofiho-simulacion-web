@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Reserva;
 use App\Services\ReservaService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Throwable;
 
 class ReservaController extends Controller
@@ -20,7 +21,14 @@ class ReservaController extends Controller
         ->orderBy('ID_MODELO')
         ->get();
 
-    return view('reservas.index', compact('reservas', 'modelos'));
+        
+$clientes = \App\Models\Cliente::where('activo', 1)
+    ->orderBy('nombre')
+    ->orderBy('apellido')
+    ->get();
+
+
+    return view('reservas.index', compact('reservas', 'modelos', 'clientes'));
 }
 
     public function show($id)
@@ -45,7 +53,14 @@ class ReservaController extends Controller
     public function store(Request $request, ReservaService $reservaService)
     {
         $datos = $request->validate([
-            'id_cliente' => 'required|integer|min:1',
+            
+'id_cliente' => [
+    'required',
+    'integer',
+    Rule::exists('oracle.CLIENTE', 'ID_CLIENTE')
+        ->where('ACTIVO', 1),
+],
+
             'id_vehiculo' => 'required|integer|min:1',
             
             'canal' => 'required|string|max:50',
@@ -77,7 +92,14 @@ class ReservaController extends Controller
     {
         $datos = $request->validate([
             'id_predio' => 'required|integer|min:1',
-            'id_cliente' => 'required|integer|min:1',
+            
+'id_cliente' => [
+    'required',
+    'integer',
+    Rule::exists('oracle.CLIENTE', 'ID_CLIENTE')
+        ->where('ACTIVO', 1),
+],
+
             'id_modelo' => 'required|integer|min:1',
             'anio' => 'required|integer|min:1900|max:2100',
             'color' => 'required|string|max:50',
@@ -184,7 +206,14 @@ class ReservaController extends Controller
 public function checkout(Request $request, ReservaService $reservaService)
 {
     $datos = $request->validate([
-        'id_cliente' => 'required|integer|min:1',
+        
+'id_cliente' => [
+    'required',
+    'integer',
+    Rule::exists('oracle.CLIENTE', 'ID_CLIENTE')
+        ->where('ACTIVO', 1),
+],
+
         'id_vehiculo' => 'required|integer|min:1',
         
         'canal' => 'required|string|max:50',

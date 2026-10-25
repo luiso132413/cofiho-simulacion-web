@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 
 @section('title', 'Reservas - COFIHO V2')
@@ -32,10 +31,18 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;">
 
             <div>
-                <label for="checkout_cliente">ID Cliente</label>
-                <input type="number" id="checkout_cliente" name="id_cliente"
-                    value="{{ old('id_cliente') }}" min="1" required
+                <label for="checkout_cliente">Cliente</label>
+                <select id="checkout_cliente" name="id_cliente" required
                     style="width:100%;padding:10px;margin-top:6px;">
+                    <option value="">Seleccione un cliente</option>
+                    @foreach($clientes as $cliente)
+                        <option value="{{ $cliente->id_cliente }}"
+                            {{ old('id_cliente') == $cliente->id_cliente ? 'selected' : '' }}>
+                            {{ $cliente->id_cliente }} -
+                            {{ $cliente->nombre }} {{ $cliente->apellido }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
 
             <div>
@@ -44,13 +51,6 @@
                     value="{{ old('id_vehiculo') }}" min="1" required
                     style="width:100%;padding:10px;margin-top:6px;">
             </div>
-
-            <!-- <div>
-                <label for="checkout_usuario">ID Usuario (opcional)</label>
-                <input type="number" id="checkout_usuario" name="id_usuario"
-                    value="{{ old('id_usuario') }}" min="1"
-                    style="width:100%;padding:10px;margin-top:6px;">
-            </div> -->
 
             <div>
                 <label for="checkout_canal">Canal</label>
@@ -105,10 +105,18 @@
 
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;">
             <div>
-                <label for="id_cliente">ID Cliente</label>
-                <input type="number" id="id_cliente" name="id_cliente"
-                    value="{{ old('id_cliente') }}" min="1" required
+                <label for="id_cliente">Cliente</label>
+                <select id="id_cliente" name="id_cliente" required
                     style="width:100%;padding:10px;margin-top:6px;">
+                    <option value="">Seleccione un cliente</option>
+                    @foreach($clientes as $cliente)
+                        <option value="{{ $cliente->id_cliente }}"
+                            {{ old('id_cliente') == $cliente->id_cliente ? 'selected' : '' }}>
+                            {{ $cliente->id_cliente }} -
+                            {{ $cliente->nombre }} {{ $cliente->apellido }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
 
             <div>
@@ -117,13 +125,6 @@
                     value="{{ old('id_vehiculo') }}" min="1" required
                     style="width:100%;padding:10px;margin-top:6px;">
             </div>
-
-            <!-- <div>
-                <label for="id_usuario">ID Usuario (opcional)</label>
-                <input type="number" id="id_usuario" name="id_usuario"
-                    value="{{ old('id_usuario') }}" min="1"
-                    style="width:100%;padding:10px;margin-top:6px;">
-            </div> -->
 
             <div>
                 <label for="canal">Canal</label>
@@ -165,10 +166,18 @@
             </div>
 
             <div>
-                <label for="fifo_cliente">ID Cliente</label>
-                <input type="number" id="fifo_cliente" name="id_cliente"
-                    value="{{ old('id_cliente') }}" min="1" required
+                <label for="fifo_cliente">Cliente</label>
+                <select id="fifo_cliente" name="id_cliente" required
                     style="width:100%;padding:10px;margin-top:6px;">
+                    <option value="">Seleccione un cliente</option>
+                    @foreach($clientes as $cliente)
+                        <option value="{{ $cliente->id_cliente }}"
+                            {{ old('id_cliente') == $cliente->id_cliente ? 'selected' : '' }}>
+                            {{ $cliente->id_cliente }} -
+                            {{ $cliente->nombre }} {{ $cliente->apellido }}
+                        </option>
+                    @endforeach
+                </select>
             </div>
 
             <div>
