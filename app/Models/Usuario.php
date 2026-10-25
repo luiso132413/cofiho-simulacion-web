@@ -44,4 +44,14 @@ class Usuario extends Authenticatable
             'id_rol'
         );
     }
+
+     public function persona()
+    {
+        return $this->belongsTo(
+            Persona::class,
+            'id_persona',
+            'id_persona'
+        );
+    }
+
 }

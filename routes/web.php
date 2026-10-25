@@ -48,11 +48,35 @@ Route::middleware('rol:ADMINISTRADOR,VENDEDOR')->group(function () {
 });
 // Usuarios - Solo ADMINISTRADOR
 Route::middleware('rol:ADMINISTRADOR')->group(function () {
+
+    // Listado
     Route::get('/usuarios', [UsuarioController::class, 'index'])
         ->name('usuarios.index');
 
+    // Formulario de registro
+    Route::get('/usuarios/create', [UsuarioController::class, 'create'])
+        ->name('usuarios.create');
+
+    // Guardar usuario
+    Route::post('/usuarios', [UsuarioController::class, 'store'])
+        ->name('usuarios.store');
+
+    // Formulario de edición
+    Route::get('/usuarios/{id}/edit', [UsuarioController::class, 'edit'])
+        ->name('usuarios.edit');
+
+    // Actualizar usuario
+    Route::put('/usuarios/{id}', [UsuarioController::class, 'update'])
+        ->name('usuarios.update');
+
+    // Activar o desactivar usuario
+    Route::patch('/usuarios/{id}/estado', [UsuarioController::class, 'toggleEstado'])
+        ->name('usuarios.estado');
+
+    // Consultar detalles
     Route::get('/usuarios/{id}', [UsuarioController::class, 'show'])
         ->name('usuarios.show');
+
 });
 
 // Reservas

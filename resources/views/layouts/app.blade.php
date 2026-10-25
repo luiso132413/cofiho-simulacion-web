@@ -32,6 +32,72 @@
         tr:hover td { background: #f8fafc; }
         .btn { display: inline-block; background: #2563eb; color: white; padding: 10px 16px; border: none; border-radius: 7px; text-decoration: none; cursor: pointer; }
         .btn:hover { background: #1d4ed8; }
+        
+/* Formularios COFIHO */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    display: block;
+    width: 100%;
+    max-width: 520px;
+    padding: 11px 13px;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    background: #ffffff;
+    color: #1e293b;
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.form-group input::placeholder {
+    color: #94a3b8;
+}
+
+.card h3 {
+    font-size: 16px;
+    color: #172337;
+    margin: 24px 0 16px;
+}
+
+.card p {
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 18px;
+}
+
+.card hr {
+    border: 0;
+    border-top: 1px solid #e2e8f0;
+    margin: 24px 0;
+}
+
+.btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
         @media (max-width: 768px) {
             .sidebar { position: relative; width: 100%; height: auto; }
             .menu { display: flex; flex-wrap: wrap; gap: 5px; }
@@ -99,7 +165,39 @@
             <h1>@yield('page-title', 'Panel de administración')</h1>
             <span class="system">Sistema de Gestión COFIHO</span>
         </header>
-        <main class="content">@yield('content')</main>
+        
+<main class="content">
+
+    @if (session('success'))
+        <div style="
+            background: #dcfce7;
+            color: #166534;
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #86efac;
+        ">
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div style="
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 14px 18px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border: 1px solid #fca5a5;
+        ">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    @yield('content')
+
+</main>
+
     </div>
     @stack('scripts')
 </body>
