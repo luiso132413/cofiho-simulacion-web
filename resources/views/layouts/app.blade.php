@@ -143,6 +143,26 @@ dialog.modal::backdrop { background:rgba(15,23,42,0.55); }
 dialog.modal h3 { margin-top:0; }
 dialog.modal .form-group input, dialog.modal .form-group select, dialog.modal .form-group textarea { max-width:100%; }
 .modal-acciones { display:flex; gap:8px; justify-content:flex-end; margin-top:8px; }
+
+/* COFIHO V2 - identidad visual corporativa; conserva clases y funcionalidades existentes */
+:root{--cofiho-navy:#101c32;--cofiho-blue:#2563eb;--cofiho-border:#e5ebf3}
+body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:#f5f7fb;color:#18243b;font-size:14px}
+.sidebar{width:258px;background:linear-gradient(180deg,#14223b 0%,#0d182c 100%);border-right:1px solid #263652;box-shadow:5px 0 28px #0e1c3410;z-index:10}
+.brand{min-height:96px;padding:23px 19px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #ffffff16;font-size:18px;letter-spacing:.02em}
+.brand-symbol{width:44px;height:44px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(135deg,#60a5fa,#2563eb);color:white!important;font-size:22px;box-shadow:0 8px 20px #0003}
+.brand-word{color:white!important;display:block;line-height:1.1}.brand-word em{font-style:normal;color:#7db5ff}.brand-word small{display:block;color:#93a5c2;font-size:9px;letter-spacing:.17em;font-weight:600;margin-top:7px}
+.menu{padding:27px 12px 16px}.menu-caption{font-size:10px;color:#7187a8;font-weight:800;letter-spacing:.17em;padding:0 15px;margin-bottom:14px}
+.menu a{display:flex;align-items:center;gap:13px;padding:12px 14px;margin-bottom:5px;color:#bdcbe0;border-radius:10px;font-size:13px;font-weight:550;min-height:44px}
+.menu a:hover{background:#ffffff12;color:#fff}.menu a.active{background:linear-gradient(95deg,#2563eb,#1c50c5);box-shadow:0 7px 18px #06132b4a;color:white}
+.nav-icon{width:19px;height:19px;flex-shrink:0;opacity:.88}.sidebar-footer{padding:17px 13px 20px;border-top:1px solid #ffffff19}
+.user-block{display:flex;align-items:center;gap:11px}.user-avatar{width:38px;height:38px;flex-shrink:0;border-radius:11px;background:#284b83;color:#e4efff;display:grid;place-items:center;font-weight:800;font-size:16px}.user-name{font-size:12px}.user-role{font-size:10px;letter-spacing:.05em;margin-top:5px}
+.logout-button{border-color:#ffffff24;border-radius:10px;text-align:center;font-size:12px;font-weight:600;padding:12px;margin-top:17px}.logout-button:hover{background:#ffffff14}
+.main{margin-left:258px}.topbar{min-height:91px;padding:19px 32px;border-bottom:1px solid var(--cofiho-border);box-shadow:0 2px 14px #17243b05}.heading-kicker{display:block;color:#8b9bb1;font-size:10px;font-weight:800;letter-spacing:.13em;margin-bottom:7px}.topbar h1{font-size:22px;letter-spacing:-.035em;font-weight:750;color:#12213a}.system{display:inline-flex;align-items:center;gap:9px;background:#f4f7fc;border:1px solid #e6ecf5;border-radius:30px;padding:10px 14px;font-size:12px}.system-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 4px #dcfce7}
+.content{padding:30px 32px;max-width:1800px;margin:auto}.card{border:1px solid #e8edf5;border-radius:16px;padding:26px;box-shadow:0 8px 30px #1c2e4a0b;margin-bottom:24px}.card h2{color:#14233c;letter-spacing:-.025em;font-size:19px}
+.table-responsive{border-radius:10px}table{font-size:13px}th{background:#f3f6fb;color:#53657f;text-transform:uppercase;font-size:10px;letter-spacing:.065em;font-weight:800;padding:15px 14px}td{padding:15px 14px;border-bottom:1px solid #edf1f7}tr:hover td{background:#f8faff}
+.btn{border-radius:9px;padding:11px 16px;font-weight:650;font-size:12px;box-shadow:0 3px 10px #2563eb18}.btn-sm{padding:8px 11px;font-size:11px}.badge{font-size:10px;letter-spacing:.025em;padding:6px 10px}.form-group input,.form-group select,.form-group textarea{border-radius:9px}
+@media(max-width:768px){.sidebar{width:100%;height:auto;position:relative}.brand{min-height:75px}.menu{padding:15px 12px;display:flex;gap:6px;flex-wrap:wrap}.menu-caption{width:100%}.menu a{margin:0;padding:10px 12px}.main{margin-left:0}.topbar{padding:18px;min-height:75px}.topbar h1{font-size:19px}.system{display:none}.content{padding:18px}.card{padding:18px}}
+
     </style>
     @stack('styles')
 </head>
@@ -153,44 +173,44 @@ dialog.modal .form-group input, dialog.modal .form-group select, dialog.modal .f
     @endphp
 
     <aside class="sidebar">
-        <div class="brand">COFIHO <span>V2</span></div>
+        <div class="brand"><span class="brand-symbol">C</span><span class="brand-word">COFIHO <em>V2</em><small>GESTIÓN AUTOMOTRIZ</small></span></div>
 
-        <nav class="menu" aria-label="Menú principal">
+        <nav class="menu" aria-label="Menú principal"><div class="menu-caption">MENÚ PRINCIPAL</div>
             @if(in_array($rolActual, ['ADMINISTRADOR', 'VENDEDOR', 'INSPECTOR'], true))
-                <a href="{{ route('vehiculos.index') }}" class="{{ request()->routeIs('vehiculos.*') ? 'active' : '' }}">Predial</a>
-                <a href="{{ route('inventario.index') }}" class="{{ request()->routeIs('inventario.*') ? 'active' : '' }}">Inventario</a>
+                <a href="{{ route('vehiculos.index') }}" class="{{ request()->routeIs('vehiculos.*') ? 'active' : '' }}"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17h14l-1.5-7h-11L5 17Z"/><path d="m7 10 2-4h6l2 4"/><path d="M5 17v2m14-2v2M7 14h.01M17 14h.01"/></svg><span>Vehículos</span></a>
+                <a href="{{ route('inventario.index') }}" class="{{ request()->routeIs('inventario.*') ? 'active' : '' }}"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-8h6v8M3 10h18"/></svg><span>Inventario</span></a>
             @endif
 
             @if(in_array($rolActual, ['ADMINISTRADOR', 'VENDEDOR'], true))
-                <a href="{{ route('clientes.index') }}" class="{{ request()->routeIs('clientes.*') ? 'active' : '' }}">Clientes</a>
+                <a href="{{ route('clientes.index') }}" class="{{ request()->routeIs('clientes.*') ? 'active' : '' }}"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg><span>Clientes</span></a>
             @endif
 
             @if($rolActual === 'ADMINISTRADOR')
-                <a href="{{ route('usuarios.index') }}" class="{{ request()->routeIs('usuarios.*') ? 'active' : '' }}">Usuarios</a>
+                <a href="{{ route('usuarios.index') }}" class="{{ request()->routeIs('usuarios.*') ? 'active' : '' }}"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><circle cx="12" cy="10" r="2"/><path d="M8.5 16a4 4 0 0 1 7 0"/></svg><span>Usuarios</span></a>
             @endif
 
             @if(in_array($rolActual, ['ADMINISTRADOR', 'VENDEDOR'], true))
-                <a href="{{ route('reservas.index') }}" class="{{ request()->routeIs('reservas.*') ? 'active' : '' }}">Reservas</a>
-                <a href="{{ route('ventas.index') }}" class="{{ request()->routeIs('ventas.*') ? 'active' : '' }}">Ventas</a>
+                <a href="{{ route('reservas.index') }}" class="{{ request()->routeIs('reservas.*') ? 'active' : '' }}"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18m-12 5 2 2 4-4"/></svg><span>Reservas</span></a>
+                <a href="{{ route('ventas.index') }}" class="{{ request()->routeIs('ventas.*') ? 'active' : '' }}"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h3"/></svg><span>Ventas</span></a>
             @endif
 
             @if($rolActual === 'ADMINISTRADOR')
-                <a href="{{ route('finanzas.index') }}" class="{{ request()->routeIs('finanzas.*') ? 'active' : '' }}">Finanzas</a>
+                <a href="{{ route('finanzas.index') }}" class="{{ request()->routeIs('finanzas.*') ? 'active' : '' }}"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="15" rx="2"/><path d="M3 10h18M16 15h3"/></svg><span>Finanzas</span></a>
             @endif
 
             @if(in_array($rolActual, ['ADMINISTRADOR', 'INSPECTOR'], true))
-                <a href="{{ route('inspecciones.index') }}" class="{{ request()->routeIs('inspecciones.*') ? 'active' : '' }}">Inspecciones</a>
+                <a href="{{ route('inspecciones.index') }}" class="{{ request()->routeIs('inspecciones.*') ? 'active' : '' }}"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="18" rx="2"/><path d="M9 4.5V3h6v1.5M9 13l2 2 4-4"/></svg><span>Inspecciones</span></a>
             @endif
 
             @if($rolActual === 'ADMINISTRADOR')
-                <a href="{{ route('reportes.index') }}" class="{{ request()->routeIs('reportes.*') ? 'active' : '' }}">Reportes</a>
+                <a href="{{ route('reportes.index') }}" class="{{ request()->routeIs('reportes.*') ? 'active' : '' }}"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v18h18M7 16v-4m5 4V7m5 9v-6"/></svg><span>Reportes</span></a>
             @endif
         </nav>
 
         @auth
             <div class="sidebar-footer">
-                <div class="user-name">{{ $usuarioActual->nombre }}</div>
-                <div class="user-role">{{ $rolActual ?? 'Sin rol asignado' }}</div>
+                <div class="user-block"><span class="user-avatar">{{ strtoupper(substr($usuarioActual->nombre ?? "U", 0, 1)) }}</span><div><div class="user-name">{{ $usuarioActual->nombre }}</div>
+                <div class="user-role">{{ $rolActual ?? 'Sin rol asignado' }}</div></div></div>
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
                     <button class="logout-button" type="submit">Cerrar sesión</button>
@@ -201,8 +221,8 @@ dialog.modal .form-group input, dialog.modal .form-group select, dialog.modal .f
 
     <div class="main">
         <header class="topbar">
-            <h1>@yield('page-title', 'Panel de administración')</h1>
-            <span class="system">Sistema de Gestión COFIHO</span>
+            <div class="page-heading"><span class="heading-kicker">COFIHO / PANEL DE CONTROL</span><h1>@yield('page-title', 'Panel de administración')</h1></div>
+            <span class="system"><span class="system-dot"></span> Sistema de Gestión COFIHO</span>
         </header>
         
 <main class="content">
@@ -337,3 +357,4 @@ dialog.modal .form-group input, dialog.modal .form-group select, dialog.modal .f
     @stack('scripts')
 </body>
 </html>
+    
