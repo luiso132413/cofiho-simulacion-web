@@ -10,12 +10,18 @@ use Throwable;
 class ReservaController extends Controller
 {
     public function index()
-    {
-        $reservas = Reserva::orderBy('id_reserva', 'desc')
-            ->get();
+{
+    $reservas = Reserva::orderBy('id_reserva', 'desc')
+        ->get();
 
-        return view('reservas.index', compact('reservas'));
-    }
+    $modelos = \Illuminate\Support\Facades\DB::connection('oracle')
+        ->table('MODELO')
+        ->select('ID_MODELO')
+        ->orderBy('ID_MODELO')
+        ->get();
+
+    return view('reservas.index', compact('reservas', 'modelos'));
+}
 
     public function show($id)
     {
@@ -72,6 +78,9 @@ class ReservaController extends Controller
         $datos = $request->validate([
             'id_predio' => 'required|integer|min:1',
             'id_cliente' => 'required|integer|min:1',
+            'id_modelo' => 'required|integer|min:1',
+            'anio' => 'required|integer|min:1900|max:2100',
+            'color' => 'required|string|max:50',
             
             'canal' => 'required|string|max:50',
         ]);
@@ -81,7 +90,10 @@ class ReservaController extends Controller
                 (int) $datos['id_predio'],
                 (int) $datos['id_cliente'],
                 (int) $request->user()->id_usuario,
-                $datos['canal']
+                $datos['canal'],
+                (int) $datos['id_modelo'],
+                (int) $datos['anio'],
+                trim($datos['color'])
             );
 
             return redirect()

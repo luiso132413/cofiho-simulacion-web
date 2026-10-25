@@ -19,16 +19,15 @@
                     <th>VIN</th>
                     <th>Marca</th>
                     <th>Modelo</th>
+                    <th>Tipo de vehículo</th>
                     <th>Año</th>
+                    <th>Condición</th>
                     <th>Precio</th>
                     <th>Estado</th>
                 </tr>
             </thead>
 
             <tbody>
-
-    @csrf
-                
                 @forelse($vehiculos as $vehiculo)
                     <tr>
                         <td>{{ $vehiculo->id_vehiculo }}</td>
@@ -43,7 +42,13 @@
                             {{ $vehiculo->modelo?->nombre ?? 'Sin modelo' }}
                         </td>
 
+                        <td>
+                            {{ $vehiculo->tipoVehiculo?->nombre ?? 'Sin tipo' }}
+                        </td>
+
                         <td>{{ $vehiculo->anio }}</td>
+
+                        <td>{{ $vehiculo->condicion }}</td>
 
                         <td>
                             Q {{ number_format((float) ($vehiculo->precio_lista ?? 0), 2) }}
@@ -53,7 +58,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" style="text-align:center;">
+                        <td colspan="9" style="text-align:center;">
                             No hay vehículos registrados.
                         </td>
                     </tr>

@@ -158,32 +158,53 @@
                 <select id="fifo_predio" name="id_predio" required
                     style="width:100%;padding:10px;margin-top:6px;">
                     <option value="">Seleccione un predio</option>
-                    <option value="1">Cofiño Stahl Central Zona 5</option>
-                    <option value="2">Agencia Roosevelt</option>
-                    <option value="3">Predio Seminuevos Cayalá</option>
+                    <option value="1" {{ old('id_predio') == '1' ? 'selected' : '' }}>Cofiño Stahl Central Zona 5</option>
+                    <option value="2" {{ old('id_predio') == '2' ? 'selected' : '' }}>Agencia Roosevelt</option>
+                    <option value="3" {{ old('id_predio') == '3' ? 'selected' : '' }}>Predio Seminuevos Cayalá</option>
                 </select>
             </div>
 
             <div>
                 <label for="fifo_cliente">ID Cliente</label>
                 <input type="number" id="fifo_cliente" name="id_cliente"
-                    min="1" required
+                    value="{{ old('id_cliente') }}" min="1" required
                     style="width:100%;padding:10px;margin-top:6px;">
             </div>
 
-            <!-- <div>
-                <label for="fifo_usuario">ID Usuario (opcional)</label>
-                <input type="number" id="fifo_usuario" name="id_usuario"
-                    min="1"
+            <div>
+                <label for="fifo_modelo">Modelo</label>
+                <select id="fifo_modelo" name="id_modelo" required
                     style="width:100%;padding:10px;margin-top:6px;">
-            </div> -->
+                    <option value="">Seleccione un modelo</option>
+                    @foreach($modelos as $modelo)
+                        <option value="{{ $modelo->id_modelo }}"
+                            {{ old('id_modelo') == $modelo->id_modelo ? 'selected' : '' }}>
+                            Modelo ID: {{ $modelo->id_modelo }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
+                <label for="fifo_anio">Año</label>
+                <input type="number" id="fifo_anio" name="anio"
+                    value="{{ old('anio') }}" min="1900" max="2100" required
+                    style="width:100%;padding:10px;margin-top:6px;">
+            </div>
+
+            <div>
+                <label for="fifo_color">Color</label>
+                <input type="text" id="fifo_color" name="color"
+                    value="{{ old('color') }}" maxlength="50" required
+                    style="width:100%;padding:10px;margin-top:6px;">
+            </div>
 
             <div>
                 <label for="fifo_canal">Canal</label>
                 <select id="fifo_canal" name="canal" required
                     style="width:100%;padding:10px;margin-top:6px;">
-                    <option value="WEB">WEB</option>
-                    <option value="AGENCIA">AGENCIA</option>
+                    <option value="WEB" {{ old('canal', 'WEB') == 'WEB' ? 'selected' : '' }}>WEB</option>
+                    <option value="AGENCIA" {{ old('canal') == 'AGENCIA' ? 'selected' : '' }}>AGENCIA</option>
                 </select>
             </div>
         </div>

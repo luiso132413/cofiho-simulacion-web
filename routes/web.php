@@ -79,8 +79,6 @@ Route::post('/reservas/{id}/devolucion', [ReservaController::class, 'registrarDe
 Route::get('/reservas/{id}', [ReservaController::class, 'show'])
     ->name('reservas.show');
 
-    Route::get('/reservas/{id}', [ReservaController::class, 'show'])
-    ->name('reservas.show');
     }); // Fin de permisos de Reservas
 
 // Ventas
