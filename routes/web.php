@@ -44,7 +44,7 @@ Route::get('/usuarios/{id}', [UsuarioController::class, 'show'])
 Route::get('/reservas', [ReservaController::class, 'index'])
     ->name('reservas.index');
 
-    Route::post('/reservas/checkout', [ReservaController::class, 'checkout'])
+Route::post('/reservas/checkout', [ReservaController::class, 'checkout'])
     ->name('reservas.checkout');
 
 Route::post('/reservas', [ReservaController::class, 'store'])
@@ -54,7 +54,7 @@ Route::post('/reservas/fifo', [ReservaController::class, 'storeFIFO'])
     ->name('reservas.fifo');
 
 Route::post('/reservas/{id}/enganche', [ReservaController::class, 'registrarEnganche'])
-->name('reservas.enganche');
+    ->name('reservas.enganche');
 
 Route::post('/reservas/{id}/devolucion', [ReservaController::class, 'registrarDevolucion'])
     ->name('reservas.devolucion');
@@ -83,7 +83,7 @@ Route::get('/finanzas/{id}', [FinanzaController::class, 'show'])
     ->name('finanzas.show');
 
 
- // Inspecciones
+// Inspecciones
 Route::get('/inspecciones', [InspeccionController::class, 'index'])
     ->name('inspecciones.index');
 
