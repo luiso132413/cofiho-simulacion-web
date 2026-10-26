@@ -1,439 +1,492 @@
-
 @extends('layouts.app')
-
 @section('title', 'Inspecciones - COFIHO V2')
 @section('page-title', 'Gestión de Inspecciones')
-
 @section('content')
+    <style>
+        .ins-wrap {
+            color: #14233d
+        }
 
-@if(session('success'))
-    <div class="card" style="margin-bottom:15px; color:green;">
-        {{ session('success') }}
-    </div>
-@endif
+        .ins-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap
+        }
 
-@if($errors->any())
-    <div class="card" style="margin-bottom:15px; color:#b91c1c;">
-        <strong>No se pudo registrar la inspección:</strong>
-        <ul>
-            @foreach($errors->all() as $error)
-                <li>{{ $error }}</li>
-            @endforeach
-        </ul>
-    </div>
-@endif
+        .ins-title {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0 0 5px
+        }
 
-<div class="card" style="margin-bottom:20px;">
+        .ins-muted {
+            font-size: 13px;
+            color: #71819a;
+            margin: 0
+        }
 
-    <h2>Registrar inspección técnica</h2>
+        .ins-btn {
+            border: 0;
+            border-radius: 9px;
+            background: #2563eb;
+            color: white;
+            padding: 11px 16px;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block
+        }
 
-    <form method="POST" action="{{ route('inspecciones.store') }}">
-        @csrf
+        .ins-btn:hover {
+            background: #1d4ed8;
+            color: white
+        }
 
-        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:15px;">
+        .ins-btn-alt {
+            background: #eef3fc;
+            color: #23416b
+        }
 
-            <div>
-                <label for="id_vehiculo">ID del vehículo usado</label>
-                <input type="number" id="id_vehiculo" name="id_vehiculo"
-                       min="1" required
-                       value="{{ old('id_vehiculo') }}"
-                       style="width:100%; padding:10px;">
-            </div>
+        .ins-btn-alt:hover {
+            background: #dce8fa;
+            color: #23416b
+        }
 
-            <div>
-                <label for="id_usuario">ID del inspector</label>
-                <input type="number" id="id_usuario" name="id_usuario"
-                       min="1" required
-                       value="{{ old('id_usuario', 3) }}"
-                       style="width:100%; padding:10px;">
-            </div>
+        .ins-stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
+            margin-bottom: 20px
+        }
 
-            <div>
-                <label for="resultado">Resultado</label>
-                <select id="resultado" name="resultado" required
-                        style="width:100%; padding:10px;">
-                    @foreach(['PENDIENTE', 'APROBADA', 'RECHAZADA'] as $estado)
-                        <option value="{{ $estado }}"
-                            @selected(old('resultado', 'PENDIENTE') === $estado)>
-                            {{ $estado }}
-                        </option>
+        .ins-stat {
+            background: #fff;
+            border: 1px solid #e4eaf4;
+            border-radius: 13px;
+            padding: 18px
+        }
+
+        .ins-stat small {
+            color: #71819a;
+            font-size: 12px
+        }
+
+        .ins-stat strong {
+            display: block;
+            font-size: 27px;
+            margin-top: 8px
+        }
+
+        .ins-panel {
+            background: #fff;
+            border: 1px solid #e4eaf4;
+            border-radius: 14px;
+            padding: 22px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 26px #14233d08
+        }
+
+        .ins-panel h3 {
+            font-size: 16px;
+            margin: 0 0 6px
+        }
+
+        .ins-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 15px
+        }
+
+        .ins-field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 7px
+        }
+
+        .ins-field input,
+        .ins-field select,
+        .ins-field textarea {
+            width: 100%;
+            min-height: 41px;
+            border: 1px solid #d7e0ee;
+            border-radius: 8px;
+            background: #fff;
+            padding: 9px 11px;
+            color: #1e2e48;
+            font-size: 13px
+        }
+
+        .ins-field textarea {
+            resize: vertical
+        }
+
+        .ins-section {
+            font-size: 13px;
+            font-weight: 800;
+            margin: 22px 0 12px;
+            padding-bottom: 9px;
+            border-bottom: 1px solid #e7edf6
+        }
+
+        .ins-table-wrap {
+            overflow-x: auto
+        }
+
+        .ins-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px
+        }
+
+        .ins-table th {
+            background: #f2f5fa;
+            color: #60708a;
+            font-size: 10px;
+            letter-spacing: .045em;
+            text-transform: uppercase;
+            text-align: left;
+            padding: 13px 11px;
+            white-space: nowrap
+        }
+
+        .ins-table td {
+            padding: 13px 11px;
+            border-bottom: 1px solid #e8edf5;
+            vertical-align: middle
+        }
+
+        .ins-table tr:hover td {
+            background: #f9fbff
+        }
+
+        .ins-pill {
+            display: inline-block;
+            border-radius: 99px;
+            padding: 5px 9px;
+            font-size: 10px;
+            font-weight: 800
+        }
+
+        .ins-ok {
+            background: #dcfce7;
+            color: #166534
+        }
+
+        .ins-wait {
+            background: #fef3c7;
+            color: #92400e
+        }
+
+        .ins-no {
+            background: #fee2e2;
+            color: #991b1b
+        }
+
+        .ins-filters {
+            display: grid;
+            grid-template-columns: 2fr 1fr auto;
+            gap: 12px;
+            align-items: end;
+            background: #f7f9fd;
+            border: 1px solid #e7edf6;
+            border-radius: 10px;
+            padding: 14px;
+            margin: 17px 0
+        }
+
+        .ins-alert {
+            padding: 14px 17px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            background: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #fecaca
+        }
+
+        .ins-alert-success {
+            background: #ecfdf5;
+            color: #166534;
+            border-color: #bbf7d0
+        }
+
+        .ins-hidden {
+            display: none
+        }
+
+        .ins-component-grid {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr 1.6fr 1fr;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 12px;
+            padding: 13px;
+            border: 1px solid #e7edf6;
+            border-radius: 10px
+        }
+
+        .ins-component-grid .ins-field {
+            min-width: 0
+        }
+
+        .ins-empty {
+            text-align: center;
+            color: #71819a;
+            padding: 28px !important
+        }
+
+        @media(max-width:1000px) {
+            .ins-stats {
+                grid-template-columns: repeat(2, 1fr)
+            }
+
+            .ins-grid {
+                grid-template-columns: repeat(2, 1fr)
+            }
+
+            .ins-component-grid {
+                grid-template-columns: repeat(2, 1fr)
+            }
+        }
+
+        @media(max-width:640px) {
+
+            .ins-stats,
+            .ins-grid,
+            .ins-component-grid,
+            .ins-filters {
+                grid-template-columns: 1fr
+            }
+
+            .ins-panel {
+                padding: 15px
+            }
+        }
+    </style>
+    @php
+        $totalIns = $inspecciones->count();
+        $aprobadasIns = $inspecciones->filter(fn($i) => strtoupper((string) $i->resultado) === 'APROBADA')->count();
+        $pendientesIns = $inspecciones->filter(fn($i) => strtoupper((string) $i->resultado) === 'PENDIENTE')->count();
+        $rechazadasIns = $inspecciones->filter(fn($i) => strtoupper((string) $i->resultado) === 'RECHAZADA')->count();
+    @endphp
+    <div class="ins-wrap">
+        @if (session('success'))
+            <div class="ins-alert ins-alert-success" role="status">{{ session('success') }}</div>
+        @endif
+        @if ($errors->any())
+            <div class="ins-alert" role="alert"><strong>No se pudo registrar la inspección:</strong>
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
                     @endforeach
-                </select>
+                </ul>
             </div>
-
+        @endif
+        <div class="ins-head">
+            <div>
+                <h2 class="ins-title">Inspecciones técnicas</h2>
+                <p class="ins-muted">Control y seguimiento de evaluaciones de vehículos usados.</p>
+            </div><button type="button" class="ins-btn" id="insOpen" aria-controls="insFormPanel" aria-expanded="false">+
+                Nueva inspección</button>
         </div>
-
-        <div style="margin-top:15px;">
-            <label for="observaciones">Observaciones generales</label>
-            <textarea id="observaciones" name="observaciones"
-                      rows="3"
-                      style="width:100%; padding:10px;">{{ old('observaciones') }}</textarea>
+        <div class="ins-stats">
+            <div class="ins-stat"><small>Total de inspecciones</small><strong>{{ $totalIns }}</strong></div>
+            <div class="ins-stat"><small>Aprobadas</small><strong>{{ $aprobadasIns }}</strong></div>
+            <div class="ins-stat"><small>Pendientes</small><strong>{{ $pendientesIns }}</strong></div>
+            <div class="ins-stat"><small>Rechazadas</small><strong>{{ $rechazadasIns }}</strong></div>
         </div>
-
-        <h3 style="margin-top:20px;">Detalles técnicos</h3>
-
-        <p>Registra el estado de cada componente inspeccionado.</p>
-
-        <div class="table-responsive">
-            <table>
-                <thead>
-                    <tr>
-                        <th>Componente</th>
-                        <th>Estado</th>
-                        <th>Observación</th>
-                        <th>Costo estimado (Q)</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    @foreach(['Motor', 'Frenos', 'Carrocería'] as $i => $componente)
-                        <tr>
-                            <td>
-    <select
-        name="detalles[{{ $i }}][componente]"
-        required
-        style="width:100%; padding:8px;"
-    >
-        @foreach(['Motor', 'Frenos', 'Carrocería'] as $opcion)
-            <option
-                value="{{ $opcion }}"
-                @selected(old("detalles.$i.componente", $componente) === $opcion)
-            >
-                {{ $opcion }}
-            </option>
-        @endforeach
-    </select>
-</td>
-
-                            
-<td>
-    <select
-        name="detalles[{{ $i }}][estado]"
-        class="estado-componente"
-        required
-        style="width:100%; padding:8px;"
-    >
-        @foreach(['BUENO', 'REGULAR', 'MALO', 'NO_APLICA'] as $estado)
-            <option
-                value="{{ $estado }}"
-                @selected(old("detalles.$i.estado", 'BUENO') === $estado)
-            >
-                {{ $estado }}
-            </option>
-        @endforeach
-    </select>
-</td>
-
-
-                            <td>
-                                <input type="text"
-                                       name="detalles[{{ $i }}][observacion]"
-                                       value="{{ old("detalles.$i.observacion") }}"
-                                       style="width:100%; padding:8px;">
-                            </td>
-
-                            
-<td>
-    <input
-        type="number"
-        name="detalles[{{ $i }}][costo_estimado]"
-        class="costo-componente"
-        value="{{ old("detalles.$i.costo_estimado", 0) }}"
-        min="0"
-        step="0.01"
-        required
-        style="width:100%; padding:8px;"
-    >
-</td>
-
-                        </tr>
-                    @endforeach
-                </tbody>
-            </table>
-        </div>
-
-        <button type="submit" class="btn" style="margin-top:15px;">
-            Registrar inspección
-        </button>
-    </form>
-</div>
-
-<div class="card">
-
-    <h2>Listado de Inspecciones</h2>
-
-    
-<div class="card">
-
-    <h2>Listado de Inspecciones</h2>
-
-    {{-- FILTROS --}}
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:15px; margin-bottom:20px;">
-
-        <div>
-            <label for="buscarInspeccion">Buscar inspección</label>
-            <input
-                type="text"
-                id="buscarInspeccion"
-                placeholder="ID inspección, vehículo o VIN"
-                oninput="filtrarInspecciones()"
-                style="width:100%; padding:10px; margin-top:5px;"
-            >
-        </div>
-
-        <div>
-            <label for="filtroResultadoInspeccion">Resultado</label>
-            <select
-                id="filtroResultadoInspeccion"
-                onchange="filtrarInspecciones()"
-                style="width:100%; padding:10px; margin-top:5px;"
-            >
-                <option value="">Todos los resultados</option>
-
-                @foreach(['PENDIENTE', 'APROBADA', 'RECHAZADA'] as $resultado)
-                    <option value="{{ $resultado }}">
-                        {{ $resultado }}
-                    </option>
+        <section id="insFormPanel" class="ins-panel ins-hidden" aria-label="Registrar inspección">
+            <div class="ins-head">
+                <div>
+                    <h3>Nueva inspección técnica</h3>
+                    <p class="ins-muted">Completa la evaluación del vehículo usado.</p>
+                </div><button type="button" class="ins-btn ins-btn-alt" id="insClose">Cerrar</button>
+            </div>
+            <form method="POST" action="{{ route('inspecciones.store') }}">@csrf
+                <div class="ins-section">01 · Información general</div>
+                <div class="ins-grid">
+                    <div class="ins-field"><label for="id_vehiculo">ID del vehículo usado</label><input type="number"
+                            id="id_vehiculo" name="id_vehiculo" min="1" value="{{ old('id_vehiculo') }}" required>
+                    </div>
+                    <div class="ins-field"><label for="id_usuario">ID del inspector</label><input type="number"
+                            id="id_usuario" name="id_usuario" min="1" value="{{ old('id_usuario', 3) }}" required>
+                    </div>
+                    <div class="ins-field"><label for="resultado">Resultado</label><select id="resultado" name="resultado"
+                            required>
+                            @foreach (['PENDIENTE', 'APROBADA', 'RECHAZADA'] as $estado)
+                                <option value="{{ $estado }}" @selected(old('resultado', 'PENDIENTE') === $estado)>{{ $estado }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="ins-section">02 · Evaluación de componentes</div>
+                <p class="ins-muted" style="margin-bottom:12px">Indica el estado de cada componente y su costo de reparación
+                    estimado.</p>
+                @foreach (['Motor', 'Frenos', 'Carrocería'] as $i => $componente)
+                    <div class="ins-component-grid">
+                        <div class="ins-field"><label>Componente</label><select
+                                name="detalles[{{ $i }}][componente]" required>
+                                @foreach (['Motor', 'Frenos', 'Carrocería'] as $opcion)
+                                    <option value="{{ $opcion }}" @selected(old("detalles.$i.componente", $componente) === $opcion)>{{ $opcion }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="ins-field"><label>Estado</label><select name="detalles[{{ $i }}][estado]"
+                                class="estado-componente" required>
+                                @foreach (['BUENO', 'REGULAR', 'MALO', 'NO_APLICA'] as $estado)
+                                    <option value="{{ $estado }}" @selected(old("detalles.$i.estado", 'BUENO') === $estado)>{{ $estado }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="ins-field"><label>Observación</label><input type="text"
+                                name="detalles[{{ $i }}][observacion]"
+                                value="{{ old("detalles.$i.observacion") }}" placeholder="Descripción del hallazgo"></div>
+                        <div class="ins-field"><label>Costo estimado (Q)</label><input type="number"
+                                name="detalles[{{ $i }}][costo_estimado]" class="costo-componente"
+                                value="{{ old("detalles.$i.costo_estimado", 0) }}" min="0" step="0.01" required>
+                        </div>
+                    </div>
                 @endforeach
-            </select>
-        </div>
-
-        <div style="display:flex; align-items:end;">
-            <button
-                type="button"
-                class="btn"
-                onclick="limpiarFiltrosInspecciones()"
-                style="width:100%;"
-            >
-                Limpiar filtros
-            </button>
-        </div>
-
+                <div class="ins-section">03 · Observaciones generales</div>
+                <div class="ins-field"><label for="observaciones">Observaciones de la inspección</label>
+                    <textarea id="observaciones" name="observaciones" rows="3"
+                        placeholder="Anota los hallazgos y recomendaciones generales">{{ old('observaciones') }}</textarea>
+                </div>
+                <div style="display:flex;justify-content:flex-end;margin-top:18px"><button type="submit"
+                        class="ins-btn">Registrar inspección</button></div>
+            </form>
+        </section>
+        <section class="ins-panel">
+            <div class="ins-head" style="margin-bottom:0">
+                <div>
+                    <h3>Historial de inspecciones</h3>
+                    <p class="ins-muted">Consulta inspecciones y sus resultados técnicos.</p>
+                </div><span class="ins-muted" id="contadorInspecciones">Mostrando {{ $totalIns }} inspecciones</span>
+            </div>
+            <div class="ins-filters">
+                <div class="ins-field"><label for="buscarInspeccion">Buscar inspección</label><input type="search"
+                        id="buscarInspeccion" placeholder="ID de inspección, vehículo o VIN"></div>
+                <div class="ins-field"><label for="filtroResultadoInspeccion">Resultado</label><select
+                        id="filtroResultadoInspeccion">
+                        <option value="">Todos los resultados</option>
+                        @foreach (['PENDIENTE', 'APROBADA', 'RECHAZADA'] as $resultado)
+                            <option value="{{ $resultado }}">{{ $resultado }}</option>
+                        @endforeach
+                    </select>
+                </div><button type="button" class="ins-btn ins-btn-alt" id="limpiarInspecciones">Limpiar filtros</button>
+            </div>
+            <div class="ins-table-wrap">
+                <table class="ins-table" id="tablaInspecciones">
+                    <thead>
+                        <tr>
+                            <th>Inspección</th>
+                            <th>Vehículo</th>
+                            <th>VIN</th>
+                            <th>Inspector</th>
+                            <th>Fecha</th>
+                            <th>Resultado</th>
+                            <th>Observaciones</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($inspecciones as $inspeccion)
+                            <tr class="fila-inspeccion" data-inspeccion="{{ $inspeccion->id_inspeccion }}"
+                                data-vehiculo="{{ $inspeccion->id_vehiculo }}"
+                                data-vin="{{ $inspeccion->vehiculo->vin ?? '' }}"
+                                data-resultado="{{ $inspeccion->resultado ?? 'PENDIENTE' }}">
+                                <td><strong>#{{ $inspeccion->id_inspeccion }}</strong></td>
+                                <td>#{{ $inspeccion->id_vehiculo }}</td>
+                                <td>{{ $inspeccion->vehiculo->vin ?? 'No disponible' }}</td>
+                                <td>#{{ $inspeccion->id_usuario ?? '—' }}</td>
+                                <td>{{ $inspeccion->fecha_inspeccion ?? 'No registrada' }}</td>
+                                <td>@php $r = strtoupper((string)($inspeccion->resultado ?? 'PENDIENTE')); @endphp<span
+                                        class="ins-pill {{ $r === 'APROBADA' ? 'ins-ok' : ($r === 'RECHAZADA' ? 'ins-no' : 'ins-wait') }}">{{ $r }}</span>
+                                </td>
+                                <td>{{ \Illuminate\Support\Str::limit($inspeccion->observaciones ?? 'Sin observaciones', 65) }}
+                                </td>
+                                <td><a class="ins-btn"
+                                        href="{{ route('inspecciones.show', $inspeccion->id_inspeccion) }}">Ver detalle</a>
+                                </td>
+                        </tr>@empty<tr>
+                                <td colspan="8" class="ins-empty">No hay inspecciones registradas.</td>
+                            </tr>
+                        @endforelse
+                        <tr id="sinResultadosInspecciones" style="display:none">
+                            <td colspan="8" class="ins-empty">No se encontraron inspecciones con los filtros
+                                seleccionados.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const panel = document.getElementById('insFormPanel'),
+                open = document.getElementById('insOpen');
 
-    {{-- CONTADOR --}}
-    <div style="margin-bottom:12px;">
-        <span id="contadorInspecciones">
-            Mostrando {{ $inspecciones->count() }} inspecciones
-        </span>
-    </div>
-
-    {{-- TABLA --}}
-    <div class="table-responsive">
-        <table id="tablaInspecciones">
-
-            <thead>
-                <tr>
-                    <th>ID Inspección</th>
-                    <th>ID Vehículo</th>
-                    <th>VIN</th>
-                    <th>ID Usuario</th>
-                    <th>Fecha</th>
-                    <th>Resultado</th>
-                    <th>Observaciones</th>
-                    <th>Detalle</th>
-                </tr>
-            </thead>
-
-            <tbody>
-                @forelse($inspecciones as $inspeccion)
-
-                    <tr
-                        class="fila-inspeccion"
-                        data-inspeccion="{{ $inspeccion->id_inspeccion }}"
-                        data-vehiculo="{{ $inspeccion->id_vehiculo }}"
-                        data-vin="{{ $inspeccion->vehiculo->vin ?? '' }}"
-                        data-resultado="{{ $inspeccion->resultado ?? 'PENDIENTE' }}"
-                    >
-
-                        <td>{{ $inspeccion->id_inspeccion }}</td>
-
-                        <td>{{ $inspeccion->id_vehiculo }}</td>
-
-                        <td>
-                            {{ $inspeccion->vehiculo->vin ?? 'No disponible' }}
-                        </td>
-
-                        <td>
-                            {{ $inspeccion->id_usuario ?? 'No asignado' }}
-                        </td>
-
-                        <td>
-                            {{ $inspeccion->fecha_inspeccion ?? 'No registrada' }}
-                        </td>
-
-                        <td>
-                            {{ $inspeccion->resultado ?? 'PENDIENTE' }}
-                        </td>
-
-                        <td>
-                            {{ $inspeccion->observaciones ?? 'Sin observaciones' }}
-                        </td>
-
-                        <td>
-                            <a
-                                href="{{ route('inspecciones.show', $inspeccion->id_inspeccion) }}"
-                                class="btn"
-                            >
-                                Ver
-                            </a>
-                        </td>
-
-                    </tr>
-
-                @empty
-
-                    <tr>
-                        <td colspan="8" style="text-align:center; padding:20px;">
-                            No hay inspecciones registradas.
-                        </td>
-                    </tr>
-
-                @endforelse
-
-                @if($inspecciones->isNotEmpty())
-                    <tr id="sinResultadosInspecciones" style="display:none;">
-                        <td colspan="8" style="text-align:center; padding:20px;">
-                            No se encontraron inspecciones con los filtros seleccionados.
-                        </td>
-                    </tr>
-                @endif
-
-            </tbody>
-
-        </table>
-    </div>
-
-</div>
-
-</div>
-
-
-<script>
-function filtrarInspecciones() {
-
-    const buscar = document.getElementById('buscarInspeccion')
-        .value.trim().toLowerCase();
-
-    const resultado = document.getElementById(
-        'filtroResultadoInspeccion'
-    ).value;
-
-    const filas = document.querySelectorAll(
-        '#tablaInspecciones .fila-inspeccion'
-    );
-
-    let visibles = 0;
-
-    filas.forEach(function(fila) {
-
-        const idInspeccion = fila.dataset.inspeccion || '';
-        const idVehiculo = fila.dataset.vehiculo || '';
-        const vin = (fila.dataset.vin || '').toLowerCase();
-        const resultadoFila = fila.dataset.resultado || '';
-
-        const coincideBusqueda =
-            buscar === '' ||
-            idInspeccion.includes(buscar) ||
-            idVehiculo.includes(buscar) ||
-            vin.includes(buscar);
-
-        const coincideResultado =
-            resultado === '' ||
-            resultadoFila === resultado;
-
-        const mostrar =
-            coincideBusqueda &&
-            coincideResultado;
-
-        fila.style.display = mostrar ? '' : 'none';
-
-        if (mostrar) {
-            visibles++;
-        }
-    });
-
-    document.getElementById('contadorInspecciones')
-        .textContent = 'Mostrando ' + visibles + ' inspecciones';
-
-    const sinResultados = document.getElementById(
-        'sinResultadosInspecciones'
-    );
-
-    if (sinResultados) {
-        sinResultados.style.display =
-            visibles === 0 ? '' : 'none';
-    }
-}
-
-function limpiarFiltrosInspecciones() {
-
-    document.getElementById('buscarInspeccion').value = '';
-
-    document.getElementById(
-        'filtroResultadoInspeccion'
-    ).value = '';
-
-    filtrarInspecciones();
-}
-</script>
-
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-
-    const filas = document.querySelectorAll(
-        '.estado-componente'
-    );
-
-    filas.forEach(function (selector) {
-
-        const fila = selector.closest('tr');
-
-        if (!fila) return;
-
-        const costo = fila.querySelector('.costo-componente');
-
-        if (!costo) return;
-
-        function actualizarCosto() {
-
-            const estado = selector.value;
-
-            if (estado === 'BUENO' || estado === 'NO_APLICA') {
-
-                costo.value = '0.00';
-                costo.readOnly = true;
-
-                costo.style.backgroundColor = '#f1f5f9';
-                costo.style.color = '#64748b';
-
-            } else {
-
-                costo.readOnly = false;
-
-                costo.style.backgroundColor = '';
-                costo.style.color = '';
-
+            function showForm(visible) {
+                panel.classList.toggle('ins-hidden', !visible);
+                open.setAttribute('aria-expanded', String(visible));
+                if (visible) panel.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
             }
-        }
+            open.addEventListener('click', () => showForm(panel.classList.contains('ins-hidden')));
+            document.getElementById('insClose').addEventListener('click', () => showForm(false));
+            @if ($errors->any() || old('id_vehiculo'))
+                showForm(true);
+            @endif
+            const buscar = document.getElementById('buscarInspeccion'),
+                resultado = document.getElementById('filtroResultadoInspeccion');
 
-        selector.addEventListener('change', function () {
-
-            const estado = selector.value;
-
-            if (estado === 'REGULAR' || estado === 'MALO') {
-                costo.value = '';
+            function filtrar() {
+                let n = 0;
+                document.querySelectorAll('.fila-inspeccion').forEach(f => {
+                    const q = buscar.value.trim().toLowerCase();
+                    const match = (!q || [f.dataset.inspeccion, f.dataset.vehiculo, f.dataset.vin].some(x =>
+                        (x || '').toLowerCase().includes(q))) && (!resultado.value || resultado
+                        .value === f.dataset.resultado);
+                    f.style.display = match ? '' : 'none';
+                    if (match) n++
+                });
+                document.getElementById('contadorInspecciones').textContent = 'Mostrando ' + n + ' inspecciones';
+                document.getElementById('sinResultadosInspecciones').style.display = n === 0 && document
+                    .querySelectorAll('.fila-inspeccion').length ? '' : 'none';
             }
+            buscar.addEventListener('input', filtrar);
+            resultado.addEventListener('change', filtrar);
+            document.getElementById('limpiarInspecciones').addEventListener('click', () => {
+                buscar.value = '';
+                resultado.value = '';
+                filtrar()
+            });
+            document.querySelectorAll('.estado-componente').forEach(s => {
+                const c = s.closest('.ins-component-grid').querySelector('.costo-componente');
 
-            actualizarCosto();
+                function update(reset) {
+                    if (reset && (s.value === 'REGULAR' || s.value === 'MALO')) c.value = '';
+                    if (s.value === 'BUENO' || s.value === 'NO_APLICA') {
+                        c.value = '0.00';
+                        c.readOnly = true;
+                        c.style.background = '#f1f5f9'
+                    } else {
+                        c.readOnly = false;
+                        c.style.background = ''
+                    }
+                }
+                s.addEventListener('change', () => update(true));
+                update(false)
+            })
         });
-
-        actualizarCosto();
-
-    });
-
-});
-</script>
-
+    </script>
 @endsection

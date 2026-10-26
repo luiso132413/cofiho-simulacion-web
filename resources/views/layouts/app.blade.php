@@ -163,6 +163,15 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:#f5f7fb;color:#182
 .btn{border-radius:9px;padding:11px 16px;font-weight:650;font-size:12px;box-shadow:0 3px 10px #2563eb18}.btn-sm{padding:8px 11px;font-size:11px}.badge{font-size:10px;letter-spacing:.025em;padding:6px 10px}.form-group input,.form-group select,.form-group textarea{border-radius:9px}
 @media(max-width:768px){.sidebar{width:100%;height:auto;position:relative}.brand{min-height:75px}.menu{padding:15px 12px;display:flex;gap:6px;flex-wrap:wrap}.menu-caption{width:100%}.menu a{margin:0;padding:10px 12px}.main{margin-left:0}.topbar{padding:18px;min-height:75px}.topbar h1{font-size:19px}.system{display:none}.content{padding:18px}.card{padding:18px}}
 
+
+        /* Notificaciones temporales COFIHO */
+        .cofiho-alert { display:flex; align-items:center; justify-content:space-between; gap:14px; padding:14px 18px; border-radius:10px; margin-bottom:20px; border:1px solid; transition:opacity .4s ease,transform .4s ease,margin .4s ease,padding .4s ease; }
+        .cofiho-alert-success { background:#dcfce7; color:#166534; border-color:#86efac; }
+        .cofiho-alert-error { background:#fee2e2; color:#991b1b; border-color:#fca5a5; }
+        .cofiho-alert-close { border:0; background:transparent; color:inherit; font-size:22px; line-height:1; cursor:pointer; padding:2px 5px; opacity:.75; }
+        .cofiho-alert-close:hover { opacity:1; }
+        .cofiho-alert.is-hiding { opacity:0; transform:translateY(-10px); }
+        @media (prefers-reduced-motion:reduce) { .cofiho-alert { transition:none; } }
     </style>
     @stack('styles')
 </head>
@@ -176,6 +185,9 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:#f5f7fb;color:#182
         <div class="brand"><span class="brand-symbol">C</span><span class="brand-word">COFIHO <em>V2</em><small>GESTIÓN AUTOMOTRIZ</small></span></div>
 
         <nav class="menu" aria-label="Menú principal"><div class="menu-caption">MENÚ PRINCIPAL</div>
+            @if(in_array($rolActual, ['ADMINISTRADOR', 'VENDEDOR', 'INSPECTOR'], true))
+                <a href="{{ route('dashboard') }}" class="{{ request()->routeIs('dashboard') ? 'active' : '' }}"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="5" rx="1.5"/><rect x="13" y="10" width="8" height="11" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg><span>Inicio</span></a>
+            @endif
             @if(in_array($rolActual, ['ADMINISTRADOR', 'VENDEDOR', 'INSPECTOR'], true))
                 <a href="{{ route('vehiculos.index') }}" class="{{ request()->routeIs('vehiculos.*') ? 'active' : '' }}"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 17h14l-1.5-7h-11L5 17Z"/><path d="m7 10 2-4h6l2 4"/><path d="M5 17v2m14-2v2M7 14h.01M17 14h.01"/></svg><span>Vehículos</span></a>
                 <a href="{{ route('inventario.index') }}" class="{{ request()->routeIs('inventario.*') ? 'active' : '' }}"><svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V9l9-6 9 6v12"/><path d="M9 21v-8h6v8M3 10h18"/></svg><span>Inventario</span></a>
@@ -228,28 +240,16 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:#f5f7fb;color:#182
 <main class="content">
 
     @if (session('success'))
-        <div style="
-            background: #dcfce7;
-            color: #166534;
-            padding: 14px 18px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #86efac;
-        ">
-            {{ session('success') }}
+        <div class="cofiho-alert cofiho-alert-success" role="status" data-auto-dismiss="5000">
+            <span>{{ session('success') }}</span>
+            <button type="button" class="cofiho-alert-close" aria-label="Cerrar notificación">&times;</button>
         </div>
     @endif
 
     @if (session('error'))
-        <div style="
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 14px 18px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border: 1px solid #fca5a5;
-        ">
-            {{ session('error') }}
+        <div class="cofiho-alert cofiho-alert-error" role="alert" data-auto-dismiss="5000">
+            <span>{{ session('error') }}</span>
+            <button type="button" class="cofiho-alert-close" aria-label="Cerrar notificación">&times;</button>
         </div>
     @endif
 
@@ -354,7 +354,22 @@ body{font-family:Inter,'Segoe UI',Arial,sans-serif;background:#f5f7fb;color:#182
         });
     })();
     </script>
+    <script>
+    document.querySelectorAll('.cofiho-alert[data-auto-dismiss]').forEach(function (alerta) {
+        var cerrando = false;
+        function cerrar() {
+            if (cerrando) return;
+            cerrando = true;
+            alerta.classList.add('is-hiding');
+            window.setTimeout(function () { alerta.remove(); }, 400);
+        }
+        var boton = alerta.querySelector('.cofiho-alert-close');
+        if (boton) boton.addEventListener('click', cerrar);
+        window.setTimeout(cerrar, Number(alerta.dataset.autoDismiss) || 5000);
+    });
+    </script>
     @stack('scripts')
+
+    
 </body>
 </html>
-    

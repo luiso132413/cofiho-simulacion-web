@@ -1,156 +1,369 @@
 @extends('layouts.app')
-
-@section('title', 'Registrar Usuario - COFIHO V2')
-
-@section('page-title', 'Registrar Nuevo Usuario')
-
+@section('title', 'Registrar nuevo usuario - COFIHO V2')
+@section('page-title', 'Registrar nuevo usuario')
 @section('content')
+    <style>
+        .ux-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 24px
+        }
 
-<div class="card">
+        .ux-head h2 {
+            margin: 0 0 6px;
+            font-size: 21px;
+            color: #14243e
+        }
 
-    <h2>Datos del nuevo empleado</h2>
+        .ux-head p {
+            margin: 0;
+            color: #64748b;
+            font-size: 13px
+        }
 
-    <p>Complete la información para crear una cuenta de acceso a COFIHO.</p>
+        .ux-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            text-decoration: none;
+            border: 0;
+            border-radius: 9px;
+            padding: 11px 16px;
+            background: #2563eb;
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer
+        }
 
-    @if ($errors->any())
-        <div class="alert alert-danger">
-            <strong>No se pudo registrar el usuario:</strong>
-            <ul>
-                @foreach ($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+        .ux-btn:hover {
+            background: #1d4ed8;
+            color: #fff
+        }
+
+        .ux-btn.secondary {
+            background: #e9eef6;
+            color: #334155
+        }
+
+        .ux-btn.secondary:hover {
+            background: #dbe4f0;
+            color: #1e293b
+        }
+
+        .ux-btn.danger {
+            background: #dc2626
+        }
+
+        .ux-btn.success {
+            background: #16a34a
+        }
+
+        .ux-btn:disabled {
+            opacity: .45;
+            cursor: not-allowed
+        }
+
+        .ux-stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 20px
+        }
+
+        .ux-stat {
+            padding: 18px;
+            border: 1px solid #e2e8f0;
+            background: #f8fafc;
+            border-radius: 12px
+        }
+
+        .ux-stat:first-child {
+            background: #eaf2ff;
+            border-color: #d5e5ff
+        }
+
+        .ux-stat strong {
+            display: block;
+            font-size: 27px;
+            color: #152b4a;
+            line-height: 1.2
+        }
+
+        .ux-stat span {
+            display: block;
+            color: #64748b;
+            font-size: 12px;
+            margin-top: 7px
+        }
+
+        .ux-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px
+        }
+
+        .ux-table th {
+            background: #f1f5f9;
+            color: #536781;
+            text-align: left;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+            padding: 14px 12px;
+            white-space: nowrap
+        }
+
+        .ux-table td {
+            padding: 13px 12px;
+            border-bottom: 1px solid #e7edf5;
+            vertical-align: middle
+        }
+
+        .ux-table tr:hover td {
+            background: #f8fbff
+        }
+
+        .ux-pill {
+            display: inline-flex;
+            border-radius: 99px;
+            padding: 6px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            background: #eaf1ff;
+            color: #2455bf;
+            white-space: nowrap
+        }
+
+        .ux-pill.ok {
+            background: #dcfce7;
+            color: #166534
+        }
+
+        .ux-pill.off {
+            background: #fee2e2;
+            color: #991b1b
+        }
+
+        .ux-actions {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center
+        }
+
+        .ux-actions .ux-btn {
+            font-size: 11px;
+            padding: 8px 10px
+        }
+
+        .ux-actions form {
+            margin: 0
+        }
+
+        .ux-name {
+            font-weight: 700;
+            color: #1e293b
+        }
+
+        .ux-muted {
+            color: #64748b;
+            font-size: 12px
+        }
+
+        .ux-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px
+        }
+
+        .ux-panel {
+            border: 1px solid #e2e8f0;
+            border-radius: 13px;
+            padding: 22px;
+            background: #fff
+        }
+
+        .ux-panel h3 {
+            margin: 0 0 18px;
+            font-size: 16px;
+            color: #16243a
+        }
+
+        .ux-fields {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 17px
+        }
+
+        .ux-field {
+            display: flex;
+            flex-direction: column;
+            gap: 7px
+        }
+
+        .ux-field label {
+            font-weight: 700;
+            color: #334155;
+            font-size: 12px
+        }
+
+        .ux-field input,
+        .ux-field select {
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+            padding: 12px;
+            border: 1px solid #d4dfec;
+            border-radius: 9px;
+            background: white;
+            color: #172337;
+            font-size: 14px
+        }
+
+        .ux-field input:focus,
+        .ux-field select:focus {
+            outline: 0;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px #2563eb20
+        }
+
+        .ux-help {
+            font-size: 12px;
+            color: #64748b;
+            margin: 0 0 18px
+        }
+
+        .ux-footer {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 22px
+        }
+
+        .ux-detail {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 17px
+        }
+
+        .ux-detail dt {
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 5px
+        }
+
+        .ux-detail dd {
+            margin: 0;
+            color: #172337;
+            font-size: 14px;
+            font-weight: 600;
+            overflow-wrap: anywhere
+        }
+
+        .ux-alert {
+            padding: 14px 16px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #991b1b;
+            border-radius: 10px;
+            margin-bottom: 20px
+        }
+
+        .ux-alert ul {
+            margin: 8px 0 0;
+            padding-left: 20px
+        }
+
+        @media(max-width:1000px) {
+            .ux-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr))
+            }
+
+            .ux-grid {
+                grid-template-columns: 1fr
+            }
+        }
+
+        @media(max-width:600px) {
+
+            .ux-stats,
+            .ux-fields,
+            .ux-detail {
+                grid-template-columns: 1fr
+            }
+
+            .ux-panel {
+                padding: 16px
+            }
+        }
+    </style>
+    <div class="card">
+        <div class="ux-head">
+            <div>
+                <h2>Registrar nuevo usuario</h2>
+                <p>Crea una cuenta de acceso para un empleado de COFIHO V2.</p>
+            </div><a class="ux-btn secondary" href="{{ route('usuarios.index') }}">← Volver a usuarios</a>
         </div>
-    @endif
+        @if ($errors->any())
+            <div class="ux-alert"><strong>Revisa los siguientes errores:</strong>
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
-    <form action="{{ route('usuarios.store') }}" method="POST">
-        @csrf
-
-        <h3>Información personal</h3>
-
-        <div class="form-group">
-            <label for="nombres">Nombres *</label>
-            <input
-                type="text"
-                id="nombres"
-                name="nombres"
-                value="{{ old('nombres') }}"
-                maxlength="100"
-                required
-            >
-        </div>
-
-        <div class="form-group">
-            <label for="apellidos">Apellidos *</label>
-            <input
-                type="text"
-                id="apellidos"
-                name="apellidos"
-                value="{{ old('apellidos') }}"
-                maxlength="100"
-                required
-            >
-        </div>
-
-        <div class="form-group">
-            <label for="dpi">DPI *</label>
-            <input
-                type="text"
-                id="dpi"
-                name="dpi"
-                value="{{ old('dpi') }}"
-                maxlength="13"
-                minlength="13"
-                pattern="[0-9]{13}"
-                inputmode="numeric"
-                placeholder="13 dígitos numéricos"
-                required
-            >
-        </div>
-
-        <div class="form-group">
-            <label for="telefono">Teléfono</label>
-            <input
-                type="text"
-                id="telefono"
-                name="telefono"
-                value="{{ old('telefono') }}"
-                maxlength="25"
-            >
-        </div>
-
-        <hr>
-
-        <h3>Información de acceso</h3>
-
-        <div class="form-group">
-            <label for="email">Correo electrónico *</label>
-            <input
-                type="email"
-                id="email"
-                name="email"
-                value="{{ old('email') }}"
-                maxlength="150"
-                required
-            >
-        </div>
-
-        <div class="form-group">
-            <label for="id_rol">Rol del empleado *</label>
-            <select id="id_rol" name="id_rol" required>
-                <option value="">Seleccione un rol</option>
-
-                @foreach ($roles as $rol)
-                    <option
-                        value="{{ $rol->id_rol }}"
-                        {{ old('id_rol') == $rol->id_rol ? 'selected' : '' }}
-                    >
-                        {{ $rol->nombre }}
-                    </option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="form-group">
-            <label for="password">Contraseña *</label>
-            <input
-                type="password"
-                id="password"
-                name="password"
-                minlength="8"
-                autocomplete="new-password"
-                required
-            >
-        </div>
-
-        <div class="form-group">
-            <label for="password_confirmation">Confirmar contraseña *</label>
-            <input
-                type="password"
-                id="password_confirmation"
-                name="password_confirmation"
-                minlength="8"
-                autocomplete="new-password"
-                required
-            >
-        </div>
-
-        <hr>
-
-        <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:20px;">
-
-            <button type="submit" class="btn">
-                Registrar Usuario
-            </button>
-
-            <a href="{{ route('usuarios.index') }}" class="btn">
-                Cancelar
-            </a>
-
-        </div>
-
-    </form>
-
-</div>
-
+        <form action="{{ route('usuarios.store') }}" method="POST">@csrf
+            <div class="ux-grid">
+                <section class="ux-panel">
+                    <h3>Información personal</h3>
+                    <div class="ux-fields">
+                        <div class="ux-field"><label for="nombres">Nombres *</label><input id="nombres" name="nombres"
+                                maxlength="100" value="{{ old('nombres') }}" required></div>
+                        <div class="ux-field"><label for="apellidos">Apellidos *</label><input id="apellidos"
+                                name="apellidos" maxlength="100" value="{{ old('apellidos') }}" required></div>
+                        <div class="ux-field"><label for="dpi">DPI *</label><input id="dpi" name="dpi"
+                                minlength="13" maxlength="13" pattern="[0-9]{13}" inputmode="numeric"
+                                value="{{ old('dpi') }}" placeholder="13 dígitos" required></div>
+                        <div class="ux-field"><label for="telefono">Teléfono</label><input id="telefono" name="telefono"
+                                maxlength="25" value="{{ old('telefono') }}"></div>
+                    </div>
+                </section>
+                <section class="ux-panel">
+                    <h3>Información de acceso</h3>
+                    <div class="ux-fields">
+                        <div class="ux-field"><label for="email">Correo electrónico *</label><input type="email"
+                                id="email" name="email" maxlength="150" value="{{ old('email') }}" required></div>
+                        <div class="ux-field"><label for="id_rol">Rol *</label><select id="id_rol" name="id_rol"
+                                required>
+                                <option value="">Seleccione un rol</option>
+                                @foreach ($roles as $rol)
+                                    <option value="{{ $rol->id_rol }}" @selected(old('id_rol') == $rol->id_rol)>{{ $rol->nombre }}
+                                    </option>
+                                @endforeach
+                            </select></div>
+                    </div>
+                </section>
+            </div>
+            <section class="ux-panel" style="margin-top:20px">
+                <h3>Contraseña de acceso</h3>
+                <p class="ux-help">Utiliza una contraseña de al menos 8 caracteres y confírmala.</p>
+                <div class="ux-fields">
+                    <div class="ux-field"><label for="password">Contraseña *</label><input type="password" id="password"
+                            name="password" minlength="8" autocomplete="new-password" required></div>
+                    <div class="ux-field"><label for="password_confirmation">Confirmar contraseña *</label><input
+                            type="password" id="password_confirmation" name="password_confirmation" minlength="8"
+                            autocomplete="new-password" required></div>
+                </div>
+            </section>
+            <div class="ux-footer"><button type="submit" class="ux-btn">Registrar usuario</button><a
+                    class="ux-btn secondary" href="{{ route('usuarios.index') }}">Cancelar</a></div>
+        </form>
+    </div>
 @endsection

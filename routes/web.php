@@ -13,14 +13,18 @@ use App\Http\Controllers\FinanzaController;
 use App\Http\Controllers\InspeccionController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\DashboardController;
 
 // Inicio
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route(auth()->check() ? 'dashboard' : 'login');
 });
 
 // Rutas protegidas
 Route::middleware('auth')->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->name('dashboard');
+
 // Vehículos - Todos los roles
 Route::middleware('rol:ADMINISTRADOR,VENDEDOR,INSPECTOR')->group(function () {
 
@@ -174,6 +178,13 @@ Route::middleware('rol:ADMINISTRADOR')->group(function () {
 
     Route::get('/reportes', [ReporteController::class, 'index'])
         ->name('reportes.index');
+
+    // Nuevos reportes integrados
+    Route::get('/reportes/inventario', [ReporteController::class, 'inventario'])
+        ->name('reportes.inventario');
+
+    Route::get('/reportes/ventas', [ReporteController::class, 'ventas'])
+        ->name('reportes.ventas');
 
     Route::get('/reportes/fifo', [ReporteController::class, 'inventarioFIFO'])
         ->name('reportes.fifo');

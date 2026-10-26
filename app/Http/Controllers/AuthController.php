@@ -36,7 +36,7 @@ class AuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended('/vehiculos');
+        return redirect()->intended(route('dashboard'));
     }
 
     // Cerrar sesión
