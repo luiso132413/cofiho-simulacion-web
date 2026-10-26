@@ -267,7 +267,7 @@
                             <option value="">Seleccione un cliente</option>
                             @foreach ($clientes as $cliente)
                                 <option value="{{ $cliente->id_cliente }}" @selected(old('id_cliente') == $cliente->id_cliente)>
-                                    {{ $cliente->nombre }} {{ $cliente->apellido }} (ID {{ $cliente->id_cliente }})
+                                    {{ $cliente->nombre }} {{ $cliente->apellido }}
                                 </option>
                             @endforeach
                         </select>
@@ -290,10 +290,17 @@
                         <div class="rv-muted">El sistema asignará el vehículo elegible según FIFO.</div>
                     </label></div>
                 <div id="rvDirecto" class="rv-grid" style="margin-top:16px">
-                    <div class="rv-field"><label for="rvVehiculo">ID del vehículo</label><input type="number"
-                            name="id_vehiculo" id="rvVehiculo" min="1" value="{{ old('id_vehiculo') }}" required
-                            placeholder="Ej. 15"><small class="rv-muted">Por ahora se usa el ID existente; luego podemos
-                            incorporar un buscador de vehículos disponibles.</small></div>
+                    <div class="rv-field"><label for="rvVehiculo">Vehículo disponible</label>
+                        <select name="id_vehiculo" id="rvVehiculo" required>
+                            <option value="">Seleccione un vehículo</option>
+                            @foreach ($vehiculosDisponibles as $vehiculo)
+                                <option value="{{ $vehiculo->id_vehiculo }}" @selected(old('id_vehiculo') == $vehiculo->id_vehiculo)>
+                                    {{ $vehiculo->marca }} {{ $vehiculo->modelo }} — {{ $vehiculo->anio }} — {{ $vehiculo->color }} — {{ $vehiculo->condicion }} — Q{{ number_format((float) $vehiculo->precio_lista, 2) }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <small class="rv-muted">Solo aparecen vehículos con estado DISPONIBLE. La disponibilidad se valida nuevamente al confirmar.</small>
+                    </div>
                 </div>
                 <div id="rvFifo" class="rv-grid" style="margin-top:16px" hidden>
                     <div class="rv-field"><label for="rvPredio">Predio</label><select id="rvPredio" name="id_predio"
@@ -307,15 +314,15 @@
                             disabled>
                             <option value="">Seleccione un modelo</option>
                             @foreach ($modelos as $modelo)
-                                <option value="{{ $modelo->id_modelo }}" @selected(old('id_modelo') == $modelo->id_modelo)>Modelo ID:
-                                    {{ $modelo->id_modelo }}</option>
+                                <option value="{{ $modelo->id_modelo }}" @selected(old('id_modelo') == $modelo->id_modelo)>{{ $modelo->marca }} {{ $modelo->modelo }}</option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="rv-field"><label for="rvAnio">Año</label><input id="rvAnio" name="anio"
-                            type="number" min="1900" max="2100" value="{{ old('anio') }}" disabled></div>
-                    <div class="rv-field"><label for="rvColor">Color</label><input id="rvColor" name="color"
-                            type="text" maxlength="50" value="{{ old('color') }}" disabled></div>
+                    <div class="rv-field" style="grid-column:1/-1">
+                        <label>Vehículos disponibles según los filtros</label>
+                        <div id="rvFifoResultados" class="rv-muted" aria-live="polite">Selecciona un predio y un modelo.</div>
+                        <small class="rv-muted">El sistema reservará automáticamente el vehículo con mayor prioridad FIFO. La lista es informativa.</small>
+                    </div>
                 </div>
             </div>
             <div class="rv-step">
@@ -355,8 +362,8 @@
                 <thead>
                     <tr>
                         <th>Reserva</th>
-                        <th>Cliente (ID)</th>
-                        <th>Vehículo (ID)</th>
+                        <th>Cliente</th>
+                        <th>Vehículo</th>
                         <th>Fecha</th>
                         <th>Estado</th>
                         <th>Acciones</th>
@@ -366,8 +373,11 @@
                     @forelse($reservas as $reserva)
                         <tr>
                             <td><strong>#{{ $reserva->id_reserva }}</strong></td>
-                            <td>{{ $reserva->id_cliente }}</td>
-                            <td>{{ $reserva->id_vehiculo }}</td>
+                            <td>{{ trim(($reserva->cliente_nombre ?? '') . ' ' . ($reserva->cliente_apellido ?? '')) }}</td>
+                            <td>
+                                <strong>{{ trim(($reserva->vehiculo_marca ?? '') . ' ' . ($reserva->vehiculo_modelo ?? '')) }}</strong>
+                                <div class="rv-muted">Placa: {{ filled($reserva->vehiculo_placa ?? null) ? $reserva->vehiculo_placa : 'Sin placa' }}</div>
+                            </td>
                             <td>{{ $reserva->fecha_reserva ?? 'No registrada' }}</td>
                             <td><span class="rv-pill"
                                     data-state="{{ strtoupper(trim($reserva->estado ?? '')) }}">{{ $reserva->estado ?? 'No definido' }}</span>
@@ -404,6 +414,38 @@
             document.getElementById('rvClose').addEventListener('click', () => togglePanel(false));
             document.getElementById('rvCancel').addEventListener('click', () => togglePanel(false));
 
+            const fifoDatos = @json($vehiculosFIFO);
+            const fifoPredio = document.getElementById('rvPredio');
+            const fifoModelo = document.getElementById('rvModelo');
+            const fifoResultados = document.getElementById('rvFifoResultados');
+            const botonReserva = document.getElementById('rvSubmit');
+
+            function renderFIFO() {
+                const predio = String(fifoPredio.value);
+                const modelo = String(fifoModelo.value);
+                fifoResultados.replaceChildren();
+                if (!predio || !modelo) {
+                    fifoResultados.textContent = 'Selecciona un predio y un modelo.';
+                    return false;
+                }
+                const encontrados = fifoDatos.filter(v => String(v.id_predio) === predio && String(v.id_modelo) === modelo);
+                if (!encontrados.length) {
+                    fifoResultados.textContent = 'No se cuenta con vehículos disponibles de este modelo en el predio seleccionado.';
+                    return false;
+                }
+                const lista = document.createElement('ol');
+                lista.style.paddingLeft = '22px';
+                encontrados.forEach((v, i) => {
+                    const li = document.createElement('li');
+                    const precio = Number(v.precio_lista).toLocaleString('es-GT', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                    li.textContent = `${v.marca} ${v.modelo} · ${v.anio} · ${v.color} · Q${precio}${i === 0 ? ' — Prioridad FIFO' : ''}`;
+                    li.style.padding = '5px 0';
+                    lista.appendChild(li);
+                });
+                fifoResultados.appendChild(lista);
+                return true;
+            }
+
             function update() {
                 const isFifo = modeInputs.find(el => el.checked).value === 'fifo';
                 direct.hidden = isFifo;
@@ -424,12 +466,15 @@
                     el.disabled = !withPay;
                     el.required = withPay;
                 });
+                botonReserva.disabled = isFifo && !renderFIFO();
                 form.action = isFifo ? form.dataset.fifo : (withPay ? form.dataset.checkout : form.dataset.direct);
                 document.getElementById('rvSubmit').textContent = withPay ? 'Confirmar reserva y enganche' :
                     'Confirmar reserva';
             }
             modeInputs.forEach(el => el.addEventListener('change', update));
             check.addEventListener('change', update);
+            fifoPredio.addEventListener('change', update);
+            fifoModelo.addEventListener('change', update);
             update();
             const buscar = document.getElementById('rvBuscar');
             buscar.addEventListener('input', () => {

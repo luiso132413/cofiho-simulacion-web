@@ -17,8 +17,11 @@
     $puedeRegistrarDevolucion = in_array($estado, ['EXPIRADA', 'CANCELADA'])
         && ($saldoDevolucion ?? 0) > 0;
 
+    $tieneEnganche = (float) ($reserva->monto_enganche ?? 0) > 0;
+
     $puedeRegistrarEnganche =
-        in_array($estado, ['PENDIENTE', 'CONFIRMADA'])
+        !$tieneEnganche
+        && in_array($estado, ['PENDIENTE', 'CONFIRMADA'])
         && $fechaExpiracion
         && $fechaExpiracion->isFuture();
 @endphp
@@ -27,11 +30,6 @@
 
     <h2>Información de la Reserva</h2>
 
-    @if (session('success'))
-    <div style="background:#dcfce7; color:#166534; padding:15px; border-radius:8px; margin-bottom:20px;">
-        {{ session('success') }}
-    </div>
-@endif
 
    @if ($errors->any())
     <div style="background:#fee2e2; color:#991b1b; padding:15px; border-radius:8px; margin-bottom:20px;">
@@ -53,13 +51,18 @@
                 </tr>
 
                 <tr>
-                    <th>ID Cliente</th>
-                    <td>{{ $reserva->id_cliente }}</td>
+                    <th>Cliente</th>
+                    <td>{{ trim(($reserva->cliente_nombre ?? '') . ' ' . ($reserva->cliente_apellido ?? '')) }}</td>
                 </tr>
 
                 <tr>
-                    <th>ID Vehículo</th>
-                    <td>{{ $reserva->id_vehiculo }}</td>
+                    <th>Vehículo</th>
+                    <td>{{ trim(($reserva->vehiculo_marca ?? '') . ' ' . ($reserva->vehiculo_modelo ?? '')) }} ({{ $reserva->vehiculo_anio ?? 'Sin año' }})</td>
+                </tr>
+
+                <tr>
+                    <th>Placa</th>
+                    <td>{{ filled($reserva->vehiculo_placa ?? null) ? $reserva->vehiculo_placa : 'Sin placa' }}</td>
                 </tr>
 
                 <tr>
@@ -189,10 +192,15 @@
     <div class="card" style="margin-top: 24px;">
         <h2>Registro de Enganche</h2>
 
-        <p>
-            No se pueden registrar enganches porque la reserva
-            no está vigente.
-        </p>
+        @if ($tieneEnganche)
+            <p style="color:#166534;">
+                Esta reserva ya tiene un enganche registrado de
+                <strong>Q {{ number_format((float) $reserva->monto_enganche, 2) }}</strong>.
+                No se permite registrar un segundo enganche.
+            </p>
+        @else
+            <p>No se pueden registrar enganches porque la reserva no está vigente.</p>
+        @endif
     </div>
 
 @endif
