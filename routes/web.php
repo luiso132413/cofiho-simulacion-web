@@ -152,8 +152,6 @@ Route::get('/finanzas/{id}/detalles', [FinanzaController::class, 'detalles'])
 Route::get('/finanzas/{id}', [FinanzaController::class, 'show'])
     ->name('finanzas.show');
 
-    Route::get('/finanzas/{id}', [FinanzaController::class, 'show'])
-    ->name('finanzas.show');
 }); // Fin de permisos de Finanzas
 
  // Inspecciones - ADMINISTRADOR e INSPECTOR
@@ -164,6 +162,9 @@ Route::middleware('rol:ADMINISTRADOR,INSPECTOR')->group(function () {
 
     Route::post('/inspecciones', [InspeccionController::class, 'store'])
         ->name('inspecciones.store');
+
+    Route::patch('/inspecciones/{id}/finalizar', [InspeccionController::class, 'finalizar'])
+        ->name('inspecciones.finalizar');
 
     Route::post('/inspecciones/avaluos', [InspeccionController::class, 'storeAvaluo'])
         ->name('inspecciones.avaluos.store');

@@ -273,10 +273,11 @@
         $pendientesIns = $inspecciones->filter(fn($i) => strtoupper((string) $i->resultado) === 'PENDIENTE')->count();
         $rechazadasIns = $inspecciones->filter(fn($i) => strtoupper((string) $i->resultado) === 'RECHAZADA')->count();
     @endphp
+    @php
+        $vehiculosPorId = $vehiculos->keyBy('id_vehiculo');
+        $inspectoresPorId = $inspectores->keyBy('id_usuario');
+    @endphp
     <div class="ins-wrap">
-        @if (session('success'))
-            <div class="ins-alert ins-alert-success" role="status">{{ session('success') }}</div>
-        @endif
         @if ($errors->any())
             <div class="ins-alert" role="alert"><strong>No se pudo registrar la inspección:</strong>
                 <ul>
@@ -309,52 +310,37 @@
             <form method="POST" action="{{ route('inspecciones.store') }}">@csrf
                 <div class="ins-section">01 · Información general</div>
                 <div class="ins-grid">
-                    <div class="ins-field"><label for="id_vehiculo">ID del vehículo usado</label><input type="number"
-                            id="id_vehiculo" name="id_vehiculo" min="1" value="{{ old('id_vehiculo') }}" required>
-                    </div>
-                    <div class="ins-field"><label for="id_usuario">ID del inspector</label><input type="number"
-                            id="id_usuario" name="id_usuario" min="1" value="{{ old('id_usuario', 3) }}" required>
-                    </div>
-                    <div class="ins-field"><label for="resultado">Resultado</label><select id="resultado" name="resultado"
-                            required>
-                            @foreach (['PENDIENTE', 'APROBADA', 'RECHAZADA'] as $estado)
-                                <option value="{{ $estado }}" @selected(old('resultado', 'PENDIENTE') === $estado)>{{ $estado }}
+                    <div class="ins-field">
+                        <label for="id_vehiculo">Vehículo usado</label>
+                        <select id="id_vehiculo" name="id_vehiculo" required>
+                            <option value="">Selecciona un vehículo usado</option>
+                            @foreach ($vehiculos->filter(fn($v) => in_array(strtoupper((string) $v->estado), ['DISPONIBLE', 'TALLER'])) as $vehiculo)
+                                <option value="{{ $vehiculo->id_vehiculo }}" @selected(old('id_vehiculo') == $vehiculo->id_vehiculo)>
+                                    {{ $vehiculo->marca }} {{ $vehiculo->modelo }} · {{ $vehiculo->placa ?: 'Sin placa' }} · {{ $vehiculo->vin }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
-                </div>
-                <div class="ins-section">02 · Evaluación de componentes</div>
-                <p class="ins-muted" style="margin-bottom:12px">Indica el estado de cada componente y su costo de reparación
-                    estimado.</p>
-                @foreach (['Motor', 'Frenos', 'Carrocería'] as $i => $componente)
-                    <div class="ins-component-grid">
-                        <div class="ins-field"><label>Componente</label><select
-                                name="detalles[{{ $i }}][componente]" required>
-                                @foreach (['Motor', 'Frenos', 'Carrocería'] as $opcion)
-                                    <option value="{{ $opcion }}" @selected(old("detalles.$i.componente", $componente) === $opcion)>{{ $opcion }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="ins-field"><label>Estado</label><select name="detalles[{{ $i }}][estado]"
-                                class="estado-componente" required>
-                                @foreach (['BUENO', 'REGULAR', 'MALO', 'NO_APLICA'] as $estado)
-                                    <option value="{{ $estado }}" @selected(old("detalles.$i.estado", 'BUENO') === $estado)>{{ $estado }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="ins-field"><label>Observación</label><input type="text"
-                                name="detalles[{{ $i }}][observacion]"
-                                value="{{ old("detalles.$i.observacion") }}" placeholder="Descripción del hallazgo"></div>
-                        <div class="ins-field"><label>Costo estimado (Q)</label><input type="number"
-                                name="detalles[{{ $i }}][costo_estimado]" class="costo-componente"
-                                value="{{ old("detalles.$i.costo_estimado", 0) }}" min="0" step="0.01" required>
-                        </div>
+                    <div class="ins-field">
+                        <label for="id_usuario">Inspector responsable</label>
+                        <select id="id_usuario" name="id_usuario" required>
+                            <option value="">Selecciona un inspector</option>
+                            @foreach ($inspectores as $inspector)
+                                <option value="{{ $inspector->id_usuario }}" @selected(old('id_usuario') == $inspector->id_usuario)>
+                                    {{ trim(($inspector->nombres ?? '') . ' ' . ($inspector->apellidos ?? '')) ?: $inspector->nombre }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
-                @endforeach
-                <div class="ins-section">03 · Observaciones generales</div>
+                    <div class="ins-field">
+                        <label>Estado inicial</label>
+                        <input type="text" value="PENDIENTE" disabled>
+                    </div>
+                </div>
+                <div class="ins-section">02 · Evaluación técnica</div>
+                <p class="ins-muted">Primero se crea la inspección como PENDIENTE. Luego, desde su detalle,
+                    se evalúan los ocho componentes y se finaliza como APROBADA o RECHAZADA.</p>
+                <div class="ins-section">03 · Observaciones iniciales</div>
                 <div class="ins-field"><label for="observaciones">Observaciones de la inspección</label>
                     <textarea id="observaciones" name="observaciones" rows="3"
                         placeholder="Anota los hallazgos y recomendaciones generales">{{ old('observaciones') }}</textarea>
@@ -372,7 +358,7 @@
             </div>
             <div class="ins-filters">
                 <div class="ins-field"><label for="buscarInspeccion">Buscar inspección</label><input type="search"
-                        id="buscarInspeccion" placeholder="ID de inspección, vehículo o VIN"></div>
+                        id="buscarInspeccion" placeholder="Inspección, placa, marca, modelo o VIN"></div>
                 <div class="ins-field"><label for="filtroResultadoInspeccion">Resultado</label><select
                         id="filtroResultadoInspeccion">
                         <option value="">Todos los resultados</option>
@@ -401,11 +387,16 @@
                             <tr class="fila-inspeccion" data-inspeccion="{{ $inspeccion->id_inspeccion }}"
                                 data-vehiculo="{{ $inspeccion->id_vehiculo }}"
                                 data-vin="{{ $inspeccion->vehiculo->vin ?? '' }}"
+                                 data-placa="{{ $vehiculosPorId->get($inspeccion->id_vehiculo)->placa ?? '' }}"
+                                 data-marca="{{ $vehiculosPorId->get($inspeccion->id_vehiculo)->marca ?? '' }}"
+                                 data-modelo="{{ $vehiculosPorId->get($inspeccion->id_vehiculo)->modelo ?? '' }}"
                                 data-resultado="{{ $inspeccion->resultado ?? 'PENDIENTE' }}">
                                 <td><strong>#{{ $inspeccion->id_inspeccion }}</strong></td>
-                                <td>#{{ $inspeccion->id_vehiculo }}</td>
+                                <td><strong>{{ $vehiculosPorId->get($inspeccion->id_vehiculo)->placa ?: 'Sin placa' }}</strong>
+                                    <div class="ins-muted">{{ $vehiculosPorId->get($inspeccion->id_vehiculo)->marca ?? '' }} {{ $vehiculosPorId->get($inspeccion->id_vehiculo)->modelo ?? '' }}</div></td>
                                 <td>{{ $inspeccion->vehiculo->vin ?? 'No disponible' }}</td>
-                                <td>#{{ $inspeccion->id_usuario ?? '—' }}</td>
+                                <td>@php $responsable = $inspectoresPorId->get($inspeccion->id_usuario); @endphp
+                                    {{ $responsable ? (trim(($responsable->nombres ?? '') . ' ' . ($responsable->apellidos ?? '')) ?: $responsable->nombre) : ($inspeccion->usuario->nombre ?? 'No disponible') }}</td>
                                 <td>{{ $inspeccion->fecha_inspeccion ?? 'No registrada' }}</td>
                                 <td>@php $r = strtoupper((string)($inspeccion->resultado ?? 'PENDIENTE')); @endphp<span
                                         class="ins-pill {{ $r === 'APROBADA' ? 'ins-ok' : ($r === 'RECHAZADA' ? 'ins-no' : 'ins-wait') }}">{{ $r }}</span>
@@ -453,7 +444,7 @@
                 let n = 0;
                 document.querySelectorAll('.fila-inspeccion').forEach(f => {
                     const q = buscar.value.trim().toLowerCase();
-                    const match = (!q || [f.dataset.inspeccion, f.dataset.vehiculo, f.dataset.vin].some(x =>
+                    const match = (!q || [f.dataset.inspeccion, f.dataset.vehiculo, f.dataset.vin, f.dataset.placa, f.dataset.marca, f.dataset.modelo].some(x =>
                         (x || '').toLowerCase().includes(q))) && (!resultado.value || resultado
                         .value === f.dataset.resultado);
                     f.style.display = match ? '' : 'none';

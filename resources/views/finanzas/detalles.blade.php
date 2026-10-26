@@ -267,7 +267,12 @@
             }
         }
     </style>
-    @php $totalDetalles = $detalles->sum('monto'); @endphp
+    @php
+        $gastos = $detalles->filter(fn($d) => strtoupper(trim((string) $d->concepto)) !== 'DESCUENTO');
+        $descuentos = $detalles->filter(fn($d) => strtoupper(trim((string) $d->concepto)) === 'DESCUENTO');
+        $totalGastos = $gastos->sum('monto');
+        $totalDescuentos = $descuentos->sum('monto');
+    @endphp
     <div class="fin-wrap">
         <div class="fin-heading">
             <div>
@@ -282,11 +287,17 @@
                 <div class="hint">Registros del desglose</div>
             </div>
             <div class="fin-stat">
-                <div class="label">Suma de montos registrados</div>
-                <div class="value">Q {{ number_format((float) $totalDetalles, 2) }}</div>
-                <div class="hint">Suma aritmética, no total neto de la venta</div>
+                <div class="label">Gastos y comisiones registrados</div>
+                <div class="value">Q {{ number_format((float) $totalGastos, 2) }}</div>
+                <div class="hint">No incluye descuentos ni representa utilidad</div>
             </div>
         </div>
+        @if ($descuentos->isNotEmpty())
+            <div class="fin-panel">
+                <h3>Descuentos registrados</h3>
+                <p class="fin-muted">Total de descuentos: <strong>Q {{ number_format((float) $totalDescuentos, 2) }}</strong>. Se muestran por separado de los gastos.</p>
+            </div>
+        @endif
         <div class="fin-panel">
             <h3>Detalle de conceptos</h3>
             <p class="fin-muted" style="margin-bottom:18px">Información financiera registrada en Oracle.</p>

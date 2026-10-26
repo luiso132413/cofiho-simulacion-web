@@ -211,11 +211,8 @@
             }
         }
     </style>
-    @php $resultado = strtoupper((string)($inspeccion->resultado ?? 'PENDIENTE')); @endphp
+    @php $resultado = strtoupper((string)($inspeccion->resultado ?? 'PENDIENTE')); $inspectorActual = $inspectores->firstWhere('id_usuario', $inspeccion->id_usuario); @endphp
     <div class="det-wrap">
-        @if (session('success'))
-            <div class="det-alert det-success" role="status">{{ session('success') }}</div>
-        @endif
         @if ($errors->any())
             <div class="det-alert" role="alert"><strong>No se pudo completar la operación:</strong>
                 <ul>
@@ -234,11 +231,11 @@
         <section class="det-card">
             <h3>Información de la inspección</h3>
             <div class="det-grid">
-                <div class="det-item"><small>Vehículo</small><strong>#{{ $inspeccion->id_vehiculo }}</strong></div>
+                <div class="det-item"><small>Vehículo / placa</small><strong>{{ $vehiculoInfo->marca ?? '' }} {{ $vehiculoInfo->modelo ?? '' }} · {{ $vehiculoInfo->placa ?? 'Sin placa' }}</strong></div>
                 <div class="det-item"><small>VIN</small><strong>{{ $inspeccion->vehiculo->vin ?? 'No disponible' }}</strong>
                 </div>
                 <div class="det-item"><small>Inspector /
-                        usuario</small><strong>#{{ $inspeccion->id_usuario ?? 'No asignado' }}</strong></div>
+                        usuario</small><strong>{{ $inspectorActual ? (trim(($inspectorActual->nombres ?? '') . ' ' . ($inspectorActual->apellidos ?? '')) ?: $inspectorActual->nombre) : ($inspeccion->usuario->nombre ?? 'No disponible') }}</strong></div>
                 <div class="det-item"><small>Fecha de
                         inspección</small><strong>{{ $inspeccion->fecha_inspeccion ?? 'No registrada' }}</strong></div>
                 <div class="det-item"><small>Resultado</small><span
@@ -294,7 +291,6 @@
                             <th>Estado</th>
                             <th>Fecha</th>
                             <th>Observaciones</th>
-                            <th>Otros datos</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -310,23 +306,8 @@
                                 </td>
                                 <td>{{ $a['fecha_avaluo'] ?? 'No registrada' }}</td>
                                 <td>{{ $a['observaciones'] ?? 'Sin observaciones' }}</td>
-                                <td class="det-data">
-                                    @foreach ($a as $campo => $valor)
-                                        @if (
-                                            !in_array(strtolower($campo), [
-                                                strtolower($avaluo->getKeyName()),
-                                                'valor_estimado',
-                                                'estado',
-                                                'fecha_avaluo',
-                                                'observaciones',
-                                            ]))
-                                            <div><strong>{{ ucfirst(str_replace('_', ' ', $campo)) }}:</strong>
-                                                {{ $valor ?? 'N/A' }}</div>
-                                        @endif
-                                    @endforeach
-                                </td>
                         </tr>@empty<tr>
-                                <td colspan="6" class="det-empty">Todavía no hay avalúos registrados para esta
+                                <td colspan="5" class="det-empty">Todavía no hay avalúos registrados para esta
                                     inspección.</td>
                             </tr>
                         @endforelse
@@ -334,6 +315,68 @@
                 </table>
             </div>
         </section>
+        @if ($resultado === 'PENDIENTE' && $esUltimaInspeccion)
+        <section class="det-card">
+            <h3>Finalizar inspección técnica</h3>
+            @if ($inspeccion->detalles->count() > 0)
+                <div class="det-notice">Esta inspección pendiente ya tiene componentes registrados.
+                    Para evitar duplicarlos, se requiere revisión antes de finalizarla.</div>
+            @else
+                <p class="det-muted">Evalúa los ocho componentes. Si rechazas la inspección,
+                    debes explicar el motivo en las observaciones generales.</p>
+                <form method="POST" action="{{ route('inspecciones.finalizar', $inspeccion->id_inspeccion) }}">
+                    @csrf
+                    @method('PATCH')
+                    @foreach (['Motor', 'Frenos', 'Carrocería', 'Transmisión', 'Suspensión', 'Sistema eléctrico', 'Neumáticos', 'Interior'] as $i => $componente)
+                        <div class="det-grid" style="grid-template-columns:1fr 1fr 1.5fr 1fr;margin-bottom:12px;align-items:end">
+                            <div class="det-field"><label>Componente</label><strong>{{ $componente }}</strong></div>
+                            <div class="det-field"><label>Estado</label>
+                                <select class="estado-componente" name="detalles[{{ $i }}][estado]" required>
+                                    @foreach (['BUENO','REGULAR','MALO','NO_APLICA'] as $estado)
+                                        <option value="{{ $estado }}" @selected(old("detalles.$i.estado", 'BUENO') === $estado)>{{ $estado }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="det-field"><label>Observación</label>
+                                <input type="text" name="detalles[{{ $i }}][observacion]" value="{{ old("detalles.$i.observacion") }}">
+                            </div>
+                            <div class="det-field"><label>Costo reparación (Q)</label>
+                                <input class="costo-componente" type="number" name="detalles[{{ $i }}][costo_estimado]"
+                                    min="0" step="0.01" value="{{ old("detalles.$i.costo_estimado", 0) }}" required>
+                            </div>
+                        </div>
+                    @endforeach
+                    <div class="det-grid" style="grid-template-columns:1fr 2fr;margin-top:18px">
+                        <div class="det-field"><label>Resultado final</label>
+                            <select name="resultado" id="resultadoFinal" required>
+                                <option value="APROBADA" @selected(old('resultado') === 'APROBADA')>APROBADA</option>
+                                <option value="RECHAZADA" @selected(old('resultado') === 'RECHAZADA')>RECHAZADA</option>
+                            </select>
+                        </div>
+                        <div class="det-field"><label>Observaciones generales / motivo del rechazo</label>
+                            <textarea name="observaciones" id="motivoFinal" rows="3">{{ old('observaciones', $inspeccion->observaciones) }}</textarea>
+                        </div>
+                    </div>
+                    <div style="display:flex;justify-content:flex-end;margin-top:18px">
+                        <button class="det-btn" type="submit">Finalizar inspección</button>
+                    </div>
+                </form>
+            @endif
+        </section>
+        @elseif ($resultado === 'PENDIENTE')
+        <section class="det-card"><h3>Inspección histórica pendiente</h3>
+            <p class="det-muted">Existe una inspección posterior para este vehículo. Este registro se conserva como historial y no puede finalizarse.</p>
+        </section>
+        @elseif ($resultado === 'RECHAZADA')
+        <section class="det-card"><h3>Inspección rechazada</h3>
+            <div class="det-notice">No es posible registrar un avalúo. Si el vehículo se repara,
+                deberá registrarse una nueva inspección.</div>
+        </section>
+        @elseif ($inspeccion->avaluos->isNotEmpty())
+        <section class="det-card"><h3>Avalúo ya registrado</h3>
+            <p class="det-muted">Esta inspección ya tiene un avalúo. No se permiten duplicados.</p>
+        </section>
+        @elseif ($esUltimaInspeccion)
         <section class="det-card">
             <div class="det-head">
                 <div>
@@ -344,9 +387,15 @@
             <form method="POST" action="{{ route('inspecciones.avaluos.store') }}">@csrf<input type="hidden"
                     name="id_inspeccion" value="{{ $inspeccion->id_inspeccion }}">
                 <div class="det-grid">
-                    <div class="det-field"><label for="id_usuario_avaluo">ID del inspector</label><input
-                            id="id_usuario_avaluo" type="number" name="id_usuario" value="{{ old('id_usuario', 3) }}"
-                            min="1" required></div>
+                    <div class="det-field"><label for="id_usuario_avaluo">Responsable del avalúo</label>
+                        <select id="id_usuario_avaluo" name="id_usuario" required>
+                            <option value="">Selecciona un responsable</option>
+                            @foreach ($inspectores as $inspector)
+                                <option value="{{ $inspector->id_usuario }}" @selected(old('id_usuario', $inspeccion->id_usuario) == $inspector->id_usuario)>
+                                    {{ trim(($inspector->nombres ?? '') . ' ' . ($inspector->apellidos ?? '')) ?: $inspector->nombre }}
+                                </option>
+                            @endforeach
+                        </select></div>
                     <div class="det-field"><label for="valor_estimado">Valor estimado (Q)</label><input id="valor_estimado"
                             type="number" name="valor_estimado" value="{{ old('valor_estimado') }}" min="0"
                             step="0.01" required></div>
@@ -363,13 +412,51 @@
                         avalúo</label>
                     <textarea id="observaciones_avaluo" name="observaciones" rows="3">{{ old('observaciones') }}</textarea>
                 </div>
-                @if ($resultado !== 'APROBADA')
-                    <div class="det-notice">Esta inspección no está aprobada. El avalúo solo puede registrarse como
-                        pendiente o rechazado.</div>
-                @endif
                 <div style="display:flex;justify-content:flex-end;margin-top:18px"><button class="det-btn"
                         type="submit">Registrar avalúo</button></div>
             </form>
         </section>
+        @endif
     </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.estado-componente').forEach(function (select) {
+                const costo = select.closest('.det-grid').querySelector('.costo-componente');
+                const actualizar = function (cambioEstado = false) {
+                    const costoFijo = ['BUENO', 'NO_APLICA'].includes(select.value);
+                    if (costoFijo) {
+                        costo.value = '0.00';
+                        costo.readOnly = true;
+                        costo.min = '0';
+                        costo.style.backgroundColor = '#f1f5f9';
+                        costo.style.cursor = 'not-allowed';
+                        costo.title = 'Este estado requiere un costo de Q0.00';
+                        costo.setCustomValidity('');
+                    } else {
+                        costo.readOnly = false;
+                        costo.min = '0.01';
+                        costo.required = true;
+                        costo.style.backgroundColor = '#fff';
+                        costo.style.cursor = '';
+                        costo.title = 'Ingresa un costo mayor que Q0.00';
+                        if (cambioEstado) costo.value = '';
+                    }
+                };
+                costo.addEventListener('input', function () {
+                    if (['REGULAR', 'MALO'].includes(select.value)) {
+                        costo.setCustomValidity(Number(costo.value) > 0 ? '' : 'Ingresa un costo mayor que Q0.00');
+                    }
+                });
+                select.addEventListener('change', function () { actualizar(true); });
+                actualizar(false);
+            });
+            const resultado = document.getElementById('resultadoFinal');
+            const motivo = document.getElementById('motivoFinal');
+            if (resultado && motivo) {
+                const actualizar = () => { motivo.required = resultado.value === 'RECHAZADA'; };
+                resultado.addEventListener('change', actualizar);
+                actualizar();
+            }
+        });
+    </script>
 @endsection

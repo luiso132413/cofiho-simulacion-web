@@ -338,7 +338,6 @@
                             <th>Transacción</th>
                             <th>Venta</th>
                             <th>Reserva</th>
-                            <th>Método</th>
                             <th>Tipo</th>
                             <th>Monto</th>
                             <th>Estado</th>
@@ -359,7 +358,6 @@
                                 <td><strong>#{{ $transaccion->id_transaccion }}</strong></td>
                                 <td>{{ $transaccion->id_venta ?? '—' }}</td>
                                 <td>{{ $transaccion->id_reserva ?? '—' }}</td>
-                                <td>#{{ $transaccion->id_metodo_pago }}</td>
                                 <td><span
                                         class="fin-pill {{ $tipo === 'PAGO' ? 'blue' : ($tipo === 'ENGANCHE' ? 'green' : ($tipo === 'DEVOLUCION' ? 'amber' : '')) }}">{{ $transaccion->tipo }}</span>
                                 </td>
@@ -374,12 +372,12 @@
                                 </td>
                             </tr>
                         @empty<tr>
-                                <td colspan="9" class="fin-empty">No hay transacciones financieras registradas.</td>
+                                <td colspan="8" class="fin-empty">No hay transacciones financieras registradas.</td>
                             </tr>
                         @endforelse
                         @if ($transacciones->isNotEmpty())
                             <tr id="sinResultadosFinanzas" style="display:none">
-                                <td colspan="9" class="fin-empty">No se encontraron transacciones con esos filtros.</td>
+                                <td colspan="8" class="fin-empty">No se encontraron transacciones con esos filtros.</td>
                             </tr>
                         @endif
                     </tbody>
