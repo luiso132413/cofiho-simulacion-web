@@ -287,28 +287,65 @@
         @if ($errors->any())
             <div class="cv-alert cv-error" role="alert" style="margin-top:16px">{{ $errors->first() }}</div>
         @endif
-        <form method="POST" action="{{ route('ventas.store') }}" id="cvVentaForm">@csrf<div class="cv-form-grid">
-                <div class="cv-field"><label for="id_cliente">Cliente</label><select id="id_cliente" name="id_cliente"
-                        required>
+        <form method="POST" action="{{ route('ventas.store') }}" id="cvVentaForm">
+            @csrf
+            <div class="cv-form-grid">
+                <div class="cv-field">
+                    <label for="id_cliente">Cliente</label>
+                    <select id="id_cliente" name="id_cliente" required>
                         <option value="">Selecciona un cliente activo</option>
-                        @foreach ($clientes as $cliente)
-                            <option value="{{ $cliente->id_cliente }}" @selected(old('id_cliente') == $cliente->id_cliente)>{{ $cliente->nombre }}
-                                {{ $cliente->apellido }} · #{{ $cliente->id_cliente }}</option>
+                        @foreach($clientes as $cliente)
+                            <option value="{{ $cliente->id_cliente }}" @selected(old('id_cliente') == $cliente->id_cliente)>{{ $cliente->nombre }} {{ $cliente->apellido }}</option>
                         @endforeach
                     </select>
                 </div>
-                <div class="cv-field"><label for="id_vehiculo">ID del vehículo</label><input type="number" min="1"
-                        id="id_vehiculo" name="id_vehiculo" value="{{ old('id_vehiculo') }}" placeholder="Ej. 4" required>
+                <div class="cv-field">
+                    <label for="cvTipoVenta">Tipo de venta</label>
+                    <select id="cvTipoVenta">
+                        <option value="directa">Venta directa · vehículo disponible</option>
+                        <option value="reserva">Venta desde reserva del cliente</option>
+                    </select>
                 </div>
-                <div class="cv-field"><label for="id_metodo_pago">ID del método de pago</label><input type="number"
-                        min="1" id="id_metodo_pago" name="id_metodo_pago" value="{{ old('id_metodo_pago') }}"
-                        placeholder="ID registrado en Oracle" required></div>
-                <div class="cv-field"><label for="id_reserva">ID de reserva (opcional)</label><input type="number"
-                        min="1" id="id_reserva" name="id_reserva" value="{{ old('id_reserva') }}"
-                        placeholder="Dejar vacío si no aplica"></div>
+                <div class="cv-field" id="cvVehiculoBox">
+                    <label for="id_vehiculo">Vehículo disponible</label>
+                    <select id="id_vehiculo" name="id_vehiculo" required>
+                        <option value="">Selecciona un vehículo</option>
+                        @foreach($vehiculos as $vehiculo)
+                            <option value="{{ $vehiculo->id_vehiculo }}" @selected(old('id_vehiculo') == $vehiculo->id_vehiculo)>
+                                {{ $vehiculo->modelo->nombre ?? 'Modelo no disponible' }} · {{ $vehiculo->anio }} · {{ $vehiculo->vin }} · Q {{ number_format((float)$vehiculo->precio_lista, 2) }}
+                            </option>
+                        @endforeach
+                        @foreach($reservas as $reserva)
+                            <option value="{{ $reserva->id_vehiculo }}" hidden data-reservado="1">Vehículo reservado #{{ $reserva->id_vehiculo }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="cv-field" id="cvReservaBox" hidden>
+                    <label for="cvReservaSelect">Reserva vigente del cliente</label>
+                    <select id="cvReservaSelect">
+                        <option value="">Selecciona una reserva</option>
+                        @foreach($reservas as $reserva)
+                            <option value="{{ $reserva->id_reserva }}" data-cliente="{{ $reserva->id_cliente }}" data-vehiculo="{{ $reserva->id_vehiculo }}">
+                                Reserva #{{ $reserva->id_reserva }} · {{ $reserva->vehiculo->modelo->nombre ?? 'Vehículo' }} · {{ $reserva->vehiculo->vin ?? '' }} · Q {{ number_format((float)($reserva->vehiculo->precio_lista ?? 0), 2) }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <p class="cv-muted" id="cvReservaAyuda" style="margin-top:7px">Selecciona un cliente para consultar sus reservas.</p>
+                </div>
+                <input type="hidden" id="id_reserva" name="id_reserva" value="{{ old('id_reserva') }}">
+                <div class="cv-field">
+                    <label for="id_metodo_pago">Método de pago</label>
+                    <select id="id_metodo_pago" name="id_metodo_pago" required>
+                        <option value="">Selecciona el método de pago</option>
+                        @foreach($metodosPago as $metodo)
+                            <option value="{{ $metodo->id_metodo_pago }}" @selected(old('id_metodo_pago') == $metodo->id_metodo_pago)>
+                                {{ $metodo->nombre ?? $metodo->tipo ?? ('Método #'.$metodo->id_metodo_pago) }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
             </div>
-            <div class="cv-note">El vehículo, método de pago y reserva se identifican temporalmente por ID, tal como los
-                recibe el controlador actual. Verifica que correspondan antes de confirmar.</div>
+            <div class="cv-note">Se procesa un vehículo por venta. Para utilizar una reserva, selecciona primero el cliente y luego la opción «Venta desde reserva». El sistema mantiene las validaciones de Oracle.</div>
             <div class="cv-actions"><button class="cv-primary" type="submit">Procesar venta</button></div>
         </form>
     </section>
@@ -323,8 +360,9 @@
                 <thead>
                     <tr>
                         <th>Venta</th>
-                        <th>Cliente ID</th>
-                        <th>Vendedor ID</th>
+                        <th>Cliente</th>
+                        <th>Vendedor</th>
+                        <th>Vehículo</th>
                         <th>Fecha</th>
                         <th>Total</th>
                         <th>Estado</th>
@@ -335,8 +373,18 @@
                     @forelse($ventas as $venta)
                         <tr>
                             <td><strong>#{{ $venta->id_venta }}</strong></td>
-                            <td>#{{ $venta->id_cliente }}</td>
-                            <td>{{ $venta->id_usuario ? '#' . $venta->id_usuario : 'No asignado' }}</td>
+                            <td>@php($c = $clientesHistoricos->get($venta->id_cliente)){{ $c ? trim($c->nombre.' '.$c->apellido) : 'Cliente #'.$venta->id_cliente }}</td>
+                            <td>
+                                @php($u = $usuarios->get($venta->id_usuario))
+                                @php($persona = $u && isset($u->id_persona) ? $personas->get($u->id_persona) : null)
+                                {{ $persona ? trim(($persona->nombre ?? '').' '.($persona->apellido ?? '')) : ($u->nombre ?? $u->email ?? 'Usuario #'.$venta->id_usuario) }}
+                            </td>
+                            <td>
+                                @foreach($venta->detalles as $detalle)
+                                    @php($v = $vehiculosHistoricos->get($detalle->id_vehiculo))
+                                    {{ $v ? (($v->modelo->nombre ?? 'Vehículo').' · '.($v->vin ?? '')) : 'Vehículo #'.$detalle->id_vehiculo }}@if(!$loop->last), @endif
+                                @endforeach
+                            </td>
                             <td>{{ $venta->fecha_venta ?? 'No registrada' }}</td>
                             <td><strong>{{ $venta->total !== null ? 'Q ' . number_format((float) $venta->total, 2) : 'No disponible' }}</strong>
                             </td>
@@ -345,7 +393,7 @@
                             </td>
                             <td><a class="cv-link" href="{{ route('ventas.show', $venta->id_venta) }}">Ver detalle</a></td>
                     </tr>@empty<tr>
-                            <td colspan="7" class="cv-empty">No hay ventas registradas.</td>
+                            <td colspan="8" class="cv-empty">No hay ventas registradas.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -381,7 +429,52 @@
                 count.textContent = shown + ' de ' + rows.length + ' registros';
                 empty.hidden = shown !== 0 || rows.length === 0;
             });
+            const cliente = document.getElementById('id_cliente');
+            const tipo = document.getElementById('cvTipoVenta');
+            const vehiculo = document.getElementById('id_vehiculo');
+            const reserva = document.getElementById('cvReservaSelect');
+            const reservaId = document.getElementById('id_reserva');
+            const vehiculoBox = document.getElementById('cvVehiculoBox');
+            const reservaBox = document.getElementById('cvReservaBox');
+            const ayuda = document.getElementById('cvReservaAyuda');
+            function actualizarReservas() {
+                let disponibles = 0;
+                Array.from(reserva.options).forEach((opt, i) => {
+                    if (!i) return;
+                    opt.hidden = opt.dataset.cliente !== cliente.value;
+                    opt.disabled = opt.hidden;
+                    if (!opt.hidden) disponibles++;
+                });
+                if (reserva.selectedOptions[0]?.disabled) reserva.value = '';
+                ayuda.textContent = !cliente.value ? 'Selecciona un cliente para consultar sus reservas.' :
+                    (disponibles ? disponibles + ' reserva(s) vigente(s) disponible(s).' : 'Este cliente no tiene reservas vigentes. Puedes realizar una venta directa.');
+            }
+            function actualizarTipo() {
+                const conReserva = tipo.value === 'reserva';
+                vehiculoBox.hidden = conReserva;
+                reservaBox.hidden = !conReserva;
+                vehiculo.required = !conReserva;
+                reserva.required = conReserva;
+                if (conReserva) {
+                    actualizarReservas();
+                    reservaId.value = reserva.value;
+                } else {
+                    reservaId.value = '';
+                }
+            }
+            cliente.addEventListener('change', () => { reserva.value = ''; reservaId.value = ''; actualizarReservas(); });
+            tipo.addEventListener('change', actualizarTipo);
+            reserva.addEventListener('change', () => {
+                reservaId.value = reserva.value;
+                if (reserva.selectedOptions[0]?.dataset.vehiculo) vehiculo.value = reserva.selectedOptions[0].dataset.vehiculo;
+            });
+            if (reservaId.value) {
+                tipo.value = 'reserva';
+                reserva.value = reservaId.value;
+            }
+            actualizarTipo();
             document.getElementById('cvVentaForm').addEventListener('submit', function(e) {
+                if (tipo.value === 'reserva' && !reserva.value) { e.preventDefault(); alert('Selecciona una reserva vigente.'); return; }
                 if (!confirm('¿Deseas procesar esta venta? Esta operación registrará cambios en Oracle.')) e
                     .preventDefault();
             });
