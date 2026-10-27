@@ -160,7 +160,7 @@
                 </ul>
             </div>
         @endif
-        <form action="{{ route('vehiculos.store') }}" method="POST" id="formVehiculo">@csrf
+        <form action="{{ route('vehiculos.store') }}" method="POST" enctype="multipart/form-data" id="formVehiculo">@csrf
             <section class="reg-card">
                 <h3>01 · Identificación</h3>
                 <div class="reg-grid">
@@ -239,6 +239,16 @@
                     <div class="reg-field"><label for="ubicacion">Ubicación dentro del predio (opcional)</label><input
                             id="ubicacion" name="ubicacion" maxlength="100" value="{{ old('ubicacion') }}"
                             placeholder="Ej. Fila A, espacio 04"></div>
+                </div>
+            </section>
+            <section class="reg-card">
+                <h3>04 · Fotografía para catálogo público</h3>
+                <div class="reg-field">
+                    <label for="foto_vehiculo">Fotografía del vehículo (opcional)</label>
+                    <input id="foto_vehiculo" name="foto_vehiculo" type="file"
+                        accept="image/jpeg,image/png,image/webp">
+                    <span class="reg-help">Una fotografía por vehículo. JPG, PNG o WebP; máximo 3 MB. Se guardará en Laravel Storage al registrar el vehículo.</span>
+                    @error('foto_vehiculo')<span class="reg-error">{{ $message }}</span>@enderror
                 </div>
             </section>
             <div class="reg-actions"><a class="reg-cancel" href="{{ route('vehiculos.index') }}">Cancelar</a><button

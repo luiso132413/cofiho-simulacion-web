@@ -14,6 +14,7 @@ use App\Http\Controllers\InspeccionController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CatalogoController;
 
 // Inicio
 Route::get('/', function () {
@@ -235,6 +236,13 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'login'])
         ->name('login.submit');
 });
+
+Route::get('/catalogo', [CatalogoController::class, 'index'])
+    ->name('catalogo.index');
+
+Route::get('/catalogo/{id}', [CatalogoController::class, 'show'])
+    ->whereNumber('id')
+    ->name('catalogo.show');
 
 Route::post('/logout', [AuthController::class, 'logout'])
     ->middleware('auth')

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Vehiculo;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 use Throwable;
 
@@ -139,9 +140,10 @@ class VehiculoController extends Controller
             'precio_lista' => 'required|numeric|min:0',
             'id_predio' => 'required|integer|exists:oracle.PREDIO,ID_PREDIO',
             'ubicacion' => 'nullable|string|max:100',
+            'foto_vehiculo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:3072',
         ]);
         try {
-            DB::connection('oracle')->transaction(function () use ($datos) {
+            $idRegistrado = DB::connection('oracle')->transaction(function () use ($datos) {
                 $db = DB::connection('oracle');
                 $modelo = $db->table('MODELO')->where('ID_MODELO', $datos['id_modelo'])
                     ->where('ID_MARCA', $datos['id_marca'])->exists();
@@ -177,8 +179,28 @@ class VehiculoController extends Controller
                     'UBICACION' => $datos['ubicacion'] ?? null,
                     'FECHA_INGRESO' => DB::raw('SYSDATE'),
                 ]);
+                return $id;
             });
-            return redirect()->route('vehiculos.index')->with('success', 'Vehículo registrado y asignado al predio correctamente.');
+
+            // La fotografía se guarda después del COMMIT; no participa en la transacción Oracle.
+            $mensaje = 'Vehículo registrado y asignado al predio correctamente.';
+            if ($request->hasFile('foto_vehiculo')) {
+                try {
+                    $foto = $request->file('foto_vehiculo');
+                    $extension = strtolower($foto->extension());
+                    $ruta = $foto->storeAs('vehiculos', $idRegistrado . '.' . $extension, 'public');
+                    if (!$ruta) {
+                        throw new RuntimeException('No se pudo escribir el archivo de imagen.');
+                    }
+                    $mensaje .= ' Fotografía guardada correctamente.';
+                } catch (Throwable $errorFoto) {
+                    report($errorFoto);
+                    return redirect()->route('vehiculos.index')
+                        ->with('success', $mensaje)
+                        ->with('warning', 'El vehículo se registró, pero no se pudo guardar la fotografía.');
+                }
+            }
+            return redirect()->route('vehiculos.index')->with('success', $mensaje);
         } catch (Throwable $e) {
             report($e);
             return back()->withInput()->withErrors(['registro' => $e instanceof RuntimeException ? $e->getMessage() : 'No se pudo registrar el vehículo. Revisa los datos e inténtalo nuevamente.']);
