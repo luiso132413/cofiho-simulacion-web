@@ -315,6 +315,60 @@
                 </table>
             </div>
         </section>
+        @if ($esAdministrador && $esUltimaInspeccion)
+            @foreach ($inspeccion->avaluos as $avaluo)
+                @if (strtoupper((string)$avaluo->estado) === 'PENDIENTE')
+                    <section class="det-card">
+                        <h3>Autorización administrativa del avalúo #{{ $avaluo->id_avaluo }}</h3>
+                        <form method="POST" action="{{ route('inspecciones.avaluos.decidir', $avaluo->id_avaluo) }}">
+                            @csrf @method('PATCH')
+                            <div class="det-grid">
+                                <div class="det-field"><label>Decisión</label><select name="decision" required>
+                                    <option value="APROBADO">APROBADO</option><option value="RECHAZADO">RECHAZADO</option>
+                                </select></div>
+                                <div class="det-field" style="grid-column:span 2"><label>Justificación (obligatoria para rechazar)</label>
+                                    <textarea name="motivo" rows="2"></textarea></div>
+                            </div>
+                            <div style="text-align:right;margin-top:12px"><button class="det-btn" type="submit">Guardar decisión</button></div>
+                        </form>
+                    </section>
+                @elseif (strtoupper((string)$avaluo->estado) === 'APROBADO')
+                    @php
+                        $precioActual = (float) ($inspeccion->vehiculo->precio_lista ?? 0);
+                        $precioAvaluado = (float) $avaluo->valor_estimado;
+                        $precioCoincide = abs($precioActual - $precioAvaluado) < 0.005;
+                        $vehiculoDisponible = strtoupper((string) ($inspeccion->vehiculo->estado ?? '')) === 'DISPONIBLE';
+                    @endphp
+                    <section class="det-card">
+                        @if ($precioCoincide)
+                            <h3><span class="det-pill det-ok">✓</span> Precio comercial vigente</h3>
+                            <p class="det-muted">El precio de lista coincide con el avalúo aprobado #{{ $avaluo->id_avaluo }}. No se requiere una nueva actualización.</p>
+                            <div class="det-grid">
+                                <div class="det-item"><small>Precio comercial actual</small><strong>Q {{ number_format($precioActual, 2) }}</strong></div>
+                                <div class="det-item"><small>Avalúo aprobado</small><strong>#{{ $avaluo->id_avaluo }} · Q {{ number_format($precioAvaluado, 2) }}</strong></div>
+                                <div class="det-item"><small>Vehículo</small><strong>{{ trim(($vehiculoInfo->marca ?? '') . ' ' . ($vehiculoInfo->modelo ?? '')) ?: 'No disponible' }}</strong></div>
+                                <div class="det-item"><small>Placa</small><strong>{{ $vehiculoInfo->placa ?? 'Sin placa' }}</strong></div>
+                                <div class="det-item"><small>VIN</small><strong>{{ $inspeccion->vehiculo->vin ?? 'No disponible' }}</strong></div>
+                                <div class="det-item"><small>Estado / condición</small><strong>{{ $inspeccion->vehiculo->estado ?? 'No disponible' }} / {{ $inspeccion->vehiculo->condicion ?? 'No disponible' }}</strong></div>
+                            </div>
+                            <p class="det-muted" style="margin-top:14px">El sistema no conserva el precio anterior en un historial específico. La coincidencia de importes no demuestra por sí sola cuándo se aplicó el avalúo.</p>
+                        @elseif ($vehiculoDisponible)
+                            <h3>Actualizar precio comercial</h3>
+                            <p class="det-muted">Precio actual: Q {{ number_format($precioActual, 2) }} · Avalúo aprobado: Q {{ number_format($precioAvaluado, 2) }}. Esta operación modifica PRECIO_LISTA y no conserva el precio anterior en un historial específico.</p>
+                            <form method="POST" action="{{ route('vehiculos.precio.actualizar', $inspeccion->id_vehiculo) }}" onsubmit="return confirm('¿Confirmas que deseas reemplazar el precio de lista por el valor del avalúo aprobado?');">
+                                @csrf @method('PATCH')
+                                <input type="hidden" name="id_avaluo" value="{{ $avaluo->id_avaluo }}">
+                                <label><input type="checkbox" name="confirmar" value="1" required> Confirmo el cambio de precio comercial</label>
+                                <div style="text-align:right;margin-top:12px"><button type="submit" class="det-btn">Actualizar precio del vehículo</button></div>
+                            </form>
+                        @else
+                            <h3>Actualización de precio no disponible</h3>
+                            <p class="det-muted">El vehículo está en estado {{ $inspeccion->vehiculo->estado ?? 'desconocido' }}. Solo es posible actualizar el precio de vehículos DISPONIBLES.</p>
+                        @endif
+                    </section>
+                @endif
+            @endforeach
+        @endif
         @if ($resultado === 'PENDIENTE' && $esUltimaInspeccion)
         <section class="det-card">
             <h3>Finalizar inspección técnica</h3>
@@ -384,6 +438,15 @@
                     <p class="det-muted" style="margin:0">Registra la valoración económica del vehículo inspeccionado.</p>
                 </div>
             </div>
+            @if ($sugerencia)
+                <div class="det-grid" style="margin-bottom:16px">
+                    <div class="det-item"><small>Precio de lista actual</small><strong>Q {{ number_format($sugerencia['precio_base'], 2) }}</strong></div>
+                    <div class="det-item"><small>Descuento técnico ({{ number_format($sugerencia['porcentaje_ajuste'], 0) }}%)</small><strong>−Q {{ number_format($sugerencia['descuento_tecnico'], 2) }}</strong></div>
+                    <div class="det-item"><small>Reparaciones</small><strong>−Q {{ number_format($sugerencia['reparaciones'], 2) }}</strong></div>
+                    <div class="det-item"><small>Avalúo sugerido</small><strong>Q {{ number_format($sugerencia['sugerido'], 2) }}</strong></div>
+                </div>
+                <p class="det-muted">Referencia interna: REGULAR −2%, MALO −5% por componente (máximo 20%) y costos de reparación. No equivale a una tasación de mercado.</p>
+            @endif
             <form method="POST" action="{{ route('inspecciones.avaluos.store') }}">@csrf<input type="hidden"
                     name="id_inspeccion" value="{{ $inspeccion->id_inspeccion }}">
                 <div class="det-grid">
@@ -396,17 +459,12 @@
                                 </option>
                             @endforeach
                         </select></div>
-                    <div class="det-field"><label for="valor_estimado">Valor estimado (Q)</label><input id="valor_estimado"
-                            type="number" name="valor_estimado" value="{{ old('valor_estimado') }}" min="0"
-                            step="0.01" required></div>
-                    <div class="det-field"><label for="estado_avaluo">Estado del avalúo</label><select id="estado_avaluo"
-                            name="estado" required>
-                            @foreach (['PENDIENTE', 'APROBADO', 'RECHAZADO'] as $estado)
-                                <option value="{{ $estado }}" @selected(old('estado', 'PENDIENTE') === $estado)>{{ $estado }}
-                                </option>
-                            @endforeach
-                        </select>
+                    <div class="det-field"><label for="valor_estimado">Valor estimado (Q)</label>
+                        <input id="valor_estimado" type="number" name="valor_estimado"
+                            value="{{ old('valor_estimado', $sugerencia['sugerido'] ?? '') }}" min="0.01" step="0.01" required>
+                        <small class="det-muted">Sugerencia editable; el avalúo se registra PENDIENTE.</small>
                     </div>
+                    <div class="det-item"><small>Estado inicial del avalúo</small><strong class="det-pill det-wait">PENDIENTE</strong></div>
                 </div>
                 <div class="det-field" style="margin-top:16px"><label for="observaciones_avaluo">Observaciones del
                         avalúo</label>

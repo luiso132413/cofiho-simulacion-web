@@ -169,6 +169,12 @@ Route::middleware('rol:ADMINISTRADOR,INSPECTOR')->group(function () {
     Route::post('/inspecciones/avaluos', [InspeccionController::class, 'storeAvaluo'])
         ->name('inspecciones.avaluos.store');
 
+    Route::patch('/inspecciones/{id}/finalizar', [InspeccionController::class, 'finalizar'])->name('inspecciones.finalizar'); // si ya existe, NO duplicar
+
+Route::patch('/inspecciones/avaluos/{id}/decidir', [InspeccionController::class, 'decidirAvaluo'])->middleware('rol:ADMINISTRADOR')->name('inspecciones.avaluos.decidir');
+
+Route::patch('/vehiculos/{id}/precio', [VehiculoController::class, 'actualizarPrecio'])->middleware('rol:ADMINISTRADOR')->name('vehiculos.precio.actualizar');
+
     Route::get('/inspecciones/{id}', [InspeccionController::class, 'show'])
         ->name('inspecciones.show');
 

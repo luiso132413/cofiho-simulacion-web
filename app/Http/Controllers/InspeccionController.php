@@ -46,7 +46,7 @@ class InspeccionController extends Controller
         return view('inspecciones.index', compact('inspecciones', 'vehiculos', 'inspectores'));
     }
 
-    public function show($id)
+    public function show($id, InspeccionService $service)
     {
         $inspeccion = Inspeccion::with([
             'vehiculo',
@@ -64,7 +64,12 @@ class InspeccionController extends Controller
              WHERE ROWNUM = 1', [$inspeccion->id_vehiculo]
         );
         $esUltimaInspeccion = $ultima && (int) $ultima->id_inspeccion === (int) $inspeccion->id_inspeccion;
-        return view('inspecciones.show', compact('inspeccion', 'inspectores', 'vehiculoInfo', 'esUltimaInspeccion'));
+        $sugerencia = null;
+        if (strtoupper((string)$inspeccion->resultado) === 'APROBADA' && $esUltimaInspeccion) {
+            $sugerencia = $service->sugerirAvaluo((int)$inspeccion->id_inspeccion);
+        }
+        $esAdministrador = $this->esAdministrador();
+        return view('inspecciones.show', compact('inspeccion', 'inspectores', 'vehiculoInfo', 'esUltimaInspeccion', 'sugerencia', 'esAdministrador'));
     }
 
     public function store(Request $request, InspeccionService $service)
@@ -126,7 +131,6 @@ class InspeccionController extends Controller
                     'id_inspeccion',
                     'id_usuario',
                     'valor_estimado',
-                    'estado',
                     'observaciones'
                 ])
             );
@@ -136,7 +140,7 @@ class InspeccionController extends Controller
                     'inspecciones.show',
                     $request->input('id_inspeccion')
                 )
-                ->with('success', 'Avalúo registrado correctamente.');
+                ->with('success', 'Propuesta de avalúo registrada como PENDIENTE para revisión administrativa.');
 
         } catch (ValidationException $e) {
             throw $e;
@@ -151,4 +155,33 @@ class InspeccionController extends Controller
                 ]);
         }
     }
+
+    private function idAutenticado(): int
+    {
+        return (int) (auth()->user()->id_usuario ?? auth()->id());
+    }
+
+    private function esAdministrador(): bool
+    {
+        return DB::connection('oracle')->table('USUARIO as U')
+            ->join('ROL as R', 'R.ID_ROL', '=', 'U.ID_ROL')
+            ->where('U.ID_USUARIO', $this->idAutenticado())
+            ->where('U.ACTIVO', 1)->where('R.NOMBRE', 'ADMINISTRADOR')->exists();
+    }
+
+    public function decidirAvaluo(Request $request, InspeccionService $service, $id)
+    {
+        $datos = $request->validate([
+            'decision' => 'required|in:APROBADO,RECHAZADO',
+            'motivo' => 'nullable|string|max:1000',
+        ]);
+        try {
+            $inspeccionId = $service->decidirAvaluo((int)$id, $datos['decision'], $datos['motivo'] ?? null, $this->idAutenticado());
+            return redirect()->route('inspecciones.show', $inspeccionId)->with('success', 'Avalúo actualizado correctamente.');
+        } catch (Throwable $e) {
+            report($e);
+            return back()->withErrors(['avaluo' => $e instanceof \RuntimeException ? $e->getMessage() : 'No se pudo actualizar el avalúo.']);
+        }
+    }
+
 }

@@ -96,7 +96,7 @@ class InspeccionService
                 }
                 $estado = $d['estado'];
                 $costo = (float) $d['costo_estimado'];
-                if (in_array($estado, ['BUENO', 'NO_APLICA'], true) && $costo > 0) {
+                if (in_array($estado, ['BUENO', 'NO_APLICA'], true) && $costo != 0) {
                     throw new RuntimeException('El costo debe ser cero para componentes BUENO o NO_APLICA.');
                 }
                 $db->insert(
@@ -135,7 +135,7 @@ class InspeccionService
             'id_inspeccion' => 'required|integer',
             'id_usuario' => 'required|integer',
             'valor_estimado' => 'required|numeric|min:0',
-            'estado' => 'required|in:PENDIENTE,APROBADO,RECHAZADO',
+            'estado' => 'nullable|in:PENDIENTE',
             'observaciones' => 'nullable|string',
         ])->validate();
 
@@ -176,12 +176,16 @@ class InspeccionService
             if ((int) $ultima->id_inspeccion !== (int) $datos['id_inspeccion']) {
                 throw new RuntimeException('Solo se puede avaluar la inspección más reciente.');
             }
-            $existente = $db->selectOne(
-                'SELECT COUNT(*) AS TOTAL FROM AVALUO WHERE ID_INSPECCION = ?',
+            // Se conserva el historial de avalúos rechazados. Solo se admite
+            // una nueva propuesta cuando no existe una pendiente o aprobada.
+            // La inspección permanece bloqueada durante esta verificación.
+            $bloqueante = $db->selectOne(
+                "SELECT COUNT(*) AS TOTAL FROM AVALUO
+                 WHERE ID_INSPECCION = ? AND ESTADO IN ('PENDIENTE', 'APROBADO')",
                 [$datos['id_inspeccion']]
             );
-            if ((int) $existente->total > 0) {
-                throw new RuntimeException('Esta inspección ya tiene un avalúo registrado.');
+            if ((int) $bloqueante->total > 0) {
+                throw new RuntimeException('Esta inspección ya tiene un avalúo pendiente o aprobado. Solo puedes presentar otra propuesta si los anteriores fueron rechazados.');
             }
             $this->validarResponsable($db, (int) $datos['id_usuario']);
 
@@ -204,13 +208,80 @@ class InspeccionService
                     $datos['id_inspeccion'],
                     $datos['id_usuario'],
                     $datos['valor_estimado'],
-                    $datos['estado'],
+                    'PENDIENTE',
                     $datos['observaciones'] ?? null,
                 ]
             );
 
             return $idAvaluo;
         });
+    }
+
+
+    /** Calcula una referencia interna, no una tasación de mercado. */
+    public function sugerirAvaluo(int $idInspeccion): array
+    {
+        $db = DB::connection('oracle');
+        $ins = $db->selectOne(
+            'SELECT V.PRECIO_LISTA FROM INSPECCION I JOIN VEHICULO V ON V.ID_VEHICULO = I.ID_VEHICULO WHERE I.ID_INSPECCION = ?',
+            [$idInspeccion]
+        );
+        if (!$ins) { throw new RuntimeException('Inspección inexistente.'); }
+        $detalles = $db->select('SELECT ESTADO, COSTO_ESTIMADO FROM DETALLE_INSPECCION WHERE ID_INSPECCION = ?', [$idInspeccion]);
+        $precio = (float) $ins->precio_lista;
+        $tasa = 0.0;
+        $reparaciones = 0.0;
+        foreach ($detalles as $d) {
+            $estado = strtoupper(trim((string) $d->estado));
+            $tasa += $estado === 'REGULAR' ? 0.02 : ($estado === 'MALO' ? 0.05 : 0);
+            $reparaciones += (float) $d->costo_estimado;
+        }
+        $tasa = min(0.20, $tasa);
+        $descuento = round($precio * $tasa, 2);
+        return [
+            'precio_base' => $precio,
+            'porcentaje_ajuste' => $tasa * 100,
+            'descuento_tecnico' => $descuento,
+            'reparaciones' => round($reparaciones, 2),
+            'sugerido' => max(0, round($precio - $descuento - $reparaciones, 2)),
+        ];
+    }
+
+    /** Solo ADMINISTRADOR puede decidir un avalúo pendiente. */
+    public function decidirAvaluo(int $idAvaluo, string $decision, ?string $motivo, int $idAdmin): int
+    {
+        if (!in_array($decision, ['APROBADO', 'RECHAZADO'], true)) {
+            throw new RuntimeException('Decisión inválida.');
+        }
+        if ($decision === 'RECHAZADO' && !trim((string) $motivo)) {
+            throw new RuntimeException('Es obligatorio indicar el motivo del rechazo.');
+        }
+        $db = DB::connection('oracle');
+        return $db->transaction(function () use ($db, $idAvaluo, $decision, $motivo, $idAdmin) {
+            $this->validarAdministrador($db, $idAdmin);
+            $a = $db->selectOne('SELECT ID_AVALUO, ID_INSPECCION, ID_VEHICULO, ESTADO, OBSERVACIONES FROM AVALUO WHERE ID_AVALUO = ? FOR UPDATE NOWAIT', [$idAvaluo]);
+            if (!$a || strtoupper((string) $a->estado) !== 'PENDIENTE') {
+                throw new RuntimeException('Solo pueden resolverse avalúos pendientes.');
+            }
+            $ultima = $db->selectOne('SELECT ID_INSPECCION FROM (SELECT ID_INSPECCION FROM INSPECCION WHERE ID_VEHICULO = ? ORDER BY FECHA_INSPECCION DESC, ID_INSPECCION DESC) WHERE ROWNUM = 1', [$a->id_vehiculo]);
+            $ins = $db->selectOne('SELECT RESULTADO FROM INSPECCION WHERE ID_INSPECCION = ?', [$a->id_inspeccion]);
+            if (!$ultima || (int)$ultima->id_inspeccion !== (int)$a->id_inspeccion || !$ins || strtoupper((string)$ins->resultado) !== 'APROBADA') {
+                throw new RuntimeException('El avalúo no corresponde a la última inspección aprobada.');
+            }
+            $observacion = trim((string) $a->observaciones);
+            if (trim((string) $motivo) !== '') {
+                $observacion = trim($observacion . "
+Decisión administrativa: " . trim($motivo));
+            }
+            $db->update('UPDATE AVALUO SET ESTADO = ?, OBSERVACIONES = ? WHERE ID_AVALUO = ?', [$decision, $observacion ?: null, $idAvaluo]);
+            return (int)$a->id_inspeccion;
+        });
+    }
+
+    public function validarAdministrador($db, int $id): void
+    {
+        $u = $db->selectOne("SELECT U.ID_USUARIO FROM USUARIO U JOIN ROL R ON R.ID_ROL = U.ID_ROL WHERE U.ID_USUARIO = ? AND U.ACTIVO = 1 AND R.NOMBRE = 'ADMINISTRADOR'", [$id]);
+        if (!$u) { throw new RuntimeException('Esta acción requiere un administrador activo.'); }
     }
 
     /**
