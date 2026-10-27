@@ -205,14 +205,23 @@ Route::middleware('rol:ADMINISTRADOR')->group(function () {
     Route::get('/reportes/ventas', [ReporteController::class, 'ventas'])
         ->name('reportes.ventas');
 
-    Route::get('/reportes/fifo', [ReporteController::class, 'inventarioFIFO'])
-        ->name('reportes.fifo');
+    Route::get('/reportes/fifo', function () {
+    return redirect()->route('reportes.inventario', [
+        'vista' => 'fifo'
+    ]);
+})->name('reportes.fifo');
 
     Route::get('/reportes/conciliacion', [ReporteController::class, 'conciliacionFinanciera'])
         ->name('reportes.conciliacion');
 
-    Route::get('/reportes/antiguedad', [ReporteController::class, 'antiguedadInventario'])
-        ->name('reportes.antiguedad');
+    Route::get('/reportes/antiguedad', function () {
+    return redirect()->route('reportes.inventario', [
+        'vista' => 'antiguedad'
+    ]);
+})->name('reportes.antiguedad');
+
+Route::get('/reportes/clientes', [ReporteController::class, 'clientes'])
+    ->name('reportes.clientes');
 
 }); // Fin de permisos de Reportes
 

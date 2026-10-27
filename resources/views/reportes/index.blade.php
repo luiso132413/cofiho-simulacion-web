@@ -1,258 +1,339 @@
 @extends('layouts.app')
-
-@section('title', 'Reportes - COFIHO V2')
-
+@section('title', 'Centro de Reportes - COFIHO V2')
 @section('page-title', 'Reportes del Sistema')
-
 @section('content')
     <style>
-        .report-head {
+        .rg-head {
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 16px;
-            margin-bottom: 20px;
-            flex-wrap: wrap
+            flex-wrap: wrap;
+            margin-bottom: 22px
         }
 
-        .report-kicker {
+        .rg-kicker {
             font-size: 11px;
             font-weight: 800;
-            letter-spacing: 1.4px;
-            color: #2563eb;
-            text-transform: uppercase
+            letter-spacing: 1.3px;
+            text-transform: uppercase;
+            color: #2563eb
         }
 
-        .report-sub {
+        .rg-title {
+            margin: 6px 0;
+            font-size: 24px;
+            color: #0f172a;
+            font-weight: 800
+        }
+
+        .rg-sub {
             font-size: 13px;
             color: #64748b;
-            line-height: 1.6;
-            margin: 7px 0 0
+            margin: 4px 0 0
         }
 
-        .report-grid {
+        .rg-stats {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 14px;
             margin-bottom: 20px
         }
 
-        .report-tile {
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 22px;
+        .rg-stat,
+        .rg-panel,
+        .rg-link {
             background: #fff;
-            transition: transform .2s, box-shadow .2s
+            border: 1px solid #dbe3ef;
+            border-radius: 14px
         }
 
-        .report-tile:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 30px #152d5210
+        .rg-stat {
+            padding: 19px 20px;
+            min-width: 0
         }
 
-        .report-icon {
-            display: inline-grid;
-            place-items: center;
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: #eff6ff;
-            color: #2563eb;
-            font-size: 21px;
-            margin-bottom: 16px
+        .rg-stat small {
+            display: block;
+            font-size: 12px;
+            color: #64748b;
+            margin-bottom: 10px
         }
 
-        .report-tile h3 {
+        .rg-stat strong {
+            display: block;
+            font-size: clamp(17px, 2vw, 25px);
+            font-weight: 800;
+            color: #0f172a;
+            overflow-wrap: anywhere
+        }
+
+        .rg-stat span {
+            display: block;
+            color: #64748b;
+            font-size: 11px;
+            margin-top: 7px
+        }
+
+        .rg-panels {
+            display: grid;
+            grid-template-columns: minmax(0, 1.7fr) minmax(280px, 1fr);
+            gap: 16px;
+            margin-bottom: 22px
+        }
+
+        .rg-panel {
+            padding: 22px;
+            min-width: 0
+        }
+
+        .rg-panel h3 {
             font-size: 16px;
-            margin: 0 0 9px;
+            margin: 0 0 6px;
             color: #0f172a
         }
 
-        .report-tile p {
-            font-size: 13px;
-            line-height: 1.6;
-            color: #64748b;
-            min-height: 44px;
-            margin: 0 0 18px
-        }
-
-        .report-stat-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
-            gap: 12px;
-            margin-bottom: 20px
-        }
-
-        .report-stat {
-            padding: 18px 20px;
-            background: #fff;
-            border: 1px solid #e2e8f0;
-            border-radius: 13px
-        }
-
-        .report-stat small {
-            display: block;
+        .rg-panel p {
             font-size: 12px;
             color: #64748b;
-            margin-bottom: 8px
+            margin: 0 0 15px
         }
 
-        .report-stat strong {
-            font-size: 25px;
-            color: #0f172a;
-            font-weight: 800
-        }
-
-        .report-stat em {
-            display: block;
-            font-style: normal;
-            color: #64748b;
-            font-size: 11px;
-            margin-top: 5px
-        }
-
-        .report-card {
-            margin-bottom: 20px
-        }
-
-        .report-card h2 {
-            margin-bottom: 8px
-        }
-
-        .report-chart {
-            height: 255px;
+        .rg-chart {
+            height: 285px;
             position: relative
         }
 
-        .report-filter {
+        .rg-mini {
             display: flex;
+            justify-content: space-between;
             gap: 12px;
-            align-items: end;
-            flex-wrap: wrap;
-            margin: 16px 0
-        }
-
-        .report-filter label {
-            font-size: 12px;
-            font-weight: 700;
-            color: #475569;
-            display: block;
-            margin-bottom: 6px
-        }
-
-        .report-filter input,
-        .report-filter select {
-            padding: 10px 12px;
-            border: 1px solid #cbd5e1;
-            border-radius: 9px;
-            background: white;
-            color: #0f172a;
-            min-width: 180px;
-            max-width: 100%
-        }
-
-        .report-filter button {
-            padding: 10px 15px;
-            border: 1px solid #cbd5e1;
-            border-radius: 9px;
-            background: #fff;
-            cursor: pointer
-        }
-
-        .report-table {
-            width: 100%
-        }
-
-        .report-table th {
-            white-space: nowrap
-        }
-
-        .report-table td {
-            vertical-align: middle
-        }
-
-        .report-pill {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 800
-        }
-
-        .report-pill.ok {
-            background: #dcfce7;
-            color: #166534
-        }
-
-        .report-pill.warn {
-            background: #fef3c7;
-            color: #92400e
-        }
-
-        .report-pill.bad {
-            background: #fee2e2;
-            color: #991b1b
-        }
-
-        .report-pill.neutral {
-            background: #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 12px 0;
+            font-size: 13px;
             color: #334155
         }
 
-        .report-empty {
-            padding: 30px;
-            text-align: center;
-            color: #64748b
+        .rg-mini:last-child {
+            border: 0
         }
 
-        .report-footer {
-            margin-top: 16px
+        .rg-mini b {
+            color: #0f172a
         }
 
-        .report-muted {
+        .rg-section {
+            font-size: 17px;
+            color: #0f172a;
+            margin: 22px 0 14px
+        }
+
+        .rg-links {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 15px
+        }
+
+        .rg-link {
+            padding: 22px;
+            text-decoration: none;
+            display: block;
+            transition: transform .15s, box-shadow .15s
+        }
+
+        .rg-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px #152d5214
+        }
+
+        .rg-icon {
+            width: 39px;
+            height: 39px;
+            border-radius: 11px;
+            background: #eff6ff;
+            color: #2563eb;
+            display: grid;
+            place-items: center;
+            font-weight: 800;
+            margin-bottom: 14px;
+            font-size: 18px
+        }
+
+        .rg-link h3 {
+            font-size: 16px;
+            color: #0f172a;
+            margin: 0 0 8px
+        }
+
+        .rg-link p {
             font-size: 12px;
-            color: #64748b
+            line-height: 1.6;
+            color: #64748b;
+            min-height: 40px;
+            margin: 0 0 15px
         }
 
-        @media(max-width:700px) {
-            .report-chart {
-                height: 220px
+        .rg-action {
+            color: #2563eb;
+            font-size: 12px;
+            font-weight: 800
+        }
+
+        .rg-note {
+            color: #64748b;
+            font-size: 12px;
+            margin-top: 15px
+        }
+
+        @media(max-width:1100px) {
+            .rg-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr))
             }
 
-            .report-stat strong {
-                font-size: 21px
+            .rg-panels {
+                grid-template-columns: 1fr
+            }
+
+            .rg-links {
+                grid-template-columns: repeat(2, minmax(0, 1fr))
+            }
+        }
+
+        @media(max-width:650px) {
+
+            .rg-links,
+            .rg-stats {
+                grid-template-columns: 1fr
+            }
+
+            .rg-panel {
+                padding: 16px
+            }
+
+            .rg-chart {
+                height: 240px
             }
         }
     </style>
-    <div class="report-head">
+    <div class="rg-head">
         <div>
-            <div class="report-kicker">Análisis gerencial</div>
-            <h2 style="margin:6px 0">Centro de Reportes</h2>
-            <p class="report-sub">Consulta los indicadores de inventario, ventas y finanzas.</p>
+            <div class="rg-kicker">Análisis gerencial / COFIHO V2</div>
+            <h2 class="rg-title">Centro de Reportes</h2>
+            <p class="rg-sub">Resumen gerencial de ventas, clientes, inventario y conciliación financiera.</p>
         </div>
     </div>
-    <div class="report-stat-grid">
-        <div class="report-stat"><small>Áreas de análisis</small><strong>3</strong><em>Inventario · Ventas · Finanzas</em>
-        </div>
-        <div class="report-stat"><small>Inventario</small><strong>FIFO</strong><em>Prioridad y antigüedad</em></div>
-        <div class="report-stat"><small>Ventas</small><strong>Q</strong><em>Resultados comerciales</em></div>
-        <div class="report-stat"><small>Finanzas</small><strong>✓</strong><em>Conciliación financiera</em></div>
+    <div class="rg-stats">
+        <div class="rg-stat"><small>Ventas
+                confirmadas</small><strong>{{ number_format($indicadores['ventas']) }}</strong><span>Histórico
+                registrado</span></div>
+        <div class="rg-stat"><small>Monto vendido</small><strong>Q
+                {{ number_format($indicadores['ingresos'], 2) }}</strong><span>Total de ventas confirmadas, no flujo de
+                caja</span></div>
+        <div class="rg-stat"><small>Vehículos en
+                FIFO</small><strong>{{ number_format($indicadores['disponibles']) }}</strong><span>Registros de la vista de
+                inventario FIFO</span></div>
+        <div class="rg-stat"><small>Inventario crítico</small><strong
+                style="color:#dc2626">{{ number_format($indicadores['criticos']) }}</strong><span>Más de 90 días en
+                inventario</span></div>
     </div>
-    <div class="report-grid">
-        <article class="report-tile"><span class="report-icon">▤</span>
+    <div class="rg-panels">
+        <section class="rg-panel">
+            <h3>Evolución mensual de ventas</h3>
+            <p>Monto de ventas confirmadas por mes, expresado en quetzales.</p>
+            @if ($meses->isNotEmpty())
+                <div class="rg-chart"><canvas id="rgVentasChart"></canvas></div>
+            @else
+                <div class="rg-chart" style="display:grid;place-items:center;color:#64748b">No hay ventas confirmadas para
+                    graficar.</div>
+            @endif
+        </section>
+        <section class="rg-panel">
+            <h3>Estado del inventario</h3>
+            <p>Distribución por antigüedad y resumen financiero.</p>
+            <div class="rg-mini"><span>Normal (0–60 días)</span><b>{{ $rangos['normal'] }}</b></div>
+            <div class="rg-mini"><span>Alerta (61–90 días)</span><b style="color:#b45309">{{ $rangos['alerta'] }}</b></div>
+            <div class="rg-mini"><span>Crítico (más de 90 días)</span><b style="color:#dc2626">{{ $rangos['critica'] }}</b>
+            </div>
+            <div class="rg-mini"><span>Valor del inventario FIFO</span><b>Q
+                    {{ number_format($indicadores['valor_inventario'], 2) }}</b></div>
+            <div class="rg-mini"><span>Ventas conciliadas</span><b>{{ $indicadores['conciliadas'] }} /
+                    {{ $indicadores['total_conciliaciones'] }}</b></div>
+        </section>
+    </div>
+    <h3 class="rg-section">Explorar reportes</h3>
+    <div class="rg-links">
+        <a class="rg-link" href="{{ route('reportes.inventario') }}">
+            <div class="rg-icon">▤</div>
             <h3>Inventario</h3>
-            <p>Consulta el orden FIFO, la antigüedad, los predios y las alertas por permanencia.</p><a class="btn"
-                href="{{ route('reportes.inventario') }}">Analizar inventario →</a>
-        </article>
-        <article class="report-tile"><span class="report-icon">↗</span>
+            <p>FIFO, antigüedad, distribución por predio y alertas.</p><span class="rg-action">Analizar inventario →</span>
+        </a>
+        <a class="rg-link" href="{{ route('reportes.ventas') }}">
+            <div class="rg-icon">↗</div>
             <h3>Ventas</h3>
-            <p>Analiza el volumen vendido, importes, evolución mensual y actividad por vendedor.</p><a class="btn"
-                href="{{ route('reportes.ventas') }}">Analizar ventas →</a>
-        </article>
-        <article class="report-tile"><span class="report-icon">▣</span>
+            <p>Importes, evolución mensual y desempeño comercial.</p><span class="rg-action">Analizar ventas →</span>
+        </a>
+        <a class="rg-link" href="{{ route('reportes.clientes') }}">
+            <div class="rg-icon">♙</div>
+            <h3>Clientes</h3>
+            <p>Compradores, recurrencia, vehículos adquiridos y ranking por monto de compras.</p>
+            <span class="rg-action">Analizar clientes →</span>
+        </a>
+        <a class="rg-link" href="{{ route('reportes.conciliacion') }}">
+            <div class="rg-icon">▣</div>
             <h3>Finanzas</h3>
-            <p>Revisa ventas, pagos, diferencias y estados de conciliación.</p><a class="btn"
-                href="{{ route('reportes.conciliacion') }}">Ver conciliación →</a>
-        </article>
+            <p>Conciliación de ventas, pagos y diferencias.</p><span class="rg-action">Ver conciliación →</span>
+        </a>
     </div>
+    <p class="rg-note">Los reportes disponibles se alimentan de los registros de Oracle. El análisis de reservas podrá incorporarse posteriormente.</p>
+    @if ($meses->isNotEmpty())
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const canvas = document.getElementById('rgVentasChart');
+                if (!canvas || !window.Chart) return;
+                new Chart(canvas, {
+                    type: 'bar',
+                    data: {
+                        labels: @json($meses->keys()->values()),
+                        datasets: [{
+                            label: 'Ventas (Q)',
+                            data: @json($meses->values()),
+                            backgroundColor: '#2563eb',
+                            borderRadius: 7,
+                            maxBarThickness: 60
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(c) {
+                                        return 'Q ' + Number(c.parsed.y).toLocaleString('es-GT', {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2
+                                        });
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(v) {
+                                        return 'Q ' + Number(v).toLocaleString('es-GT');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            });
+        </script>
+    @endif
 @endsection

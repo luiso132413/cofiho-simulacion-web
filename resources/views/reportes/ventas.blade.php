@@ -307,8 +307,9 @@
                 según filtros</em></div>
         <div class="report-stat"><small>Monto total vendido</small><strong style="font-size:20px">Q
                 {{ number_format($ventas->sum('total'), 2) }}</strong><em>Importe de ventas seleccionadas</em></div>
-        <div class="report-stat"><small>Ticket promedio</small><strong style="font-size:20px">Q
+        <div class="report-stat"><small>Valor promedio por venta</small><strong style="font-size:20px">Q
                 {{ number_format($ventas->avg('total') ?? 0, 2) }}</strong><em>Promedio por operación</em></div>
+        <div class="report-stat"><small>Vehículos vendidos</small><strong>{{ $totalVehiculos }}</strong><em>Unidades en ventas filtradas</em></div>
         <div class="report-stat"><small>Vendedores con
                 ventas</small><strong>{{ $porVendedor->count() }}</strong><em>Usuarios con operaciones</em></div>
     </div>
@@ -319,24 +320,26 @@
     </div>
     <div class="card report-card">
         <h2>Ventas por vendedor</h2>
-        <p class="report-sub">Desempeño según el usuario que registró cada venta.</p>
+        <p class="report-sub">Ranking por monto vendido, según el usuario que registró cada venta.</p>
         <div class="sales-scroll">
             <table class="sales-table">
                 <thead>
                     <tr>
-                        <th>Vendedor (ID)</th>
+                        <th>Vendedor</th>
                         <th>Ventas</th>
+                        <th>Vehículos</th>
                         <th>Monto</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse($porVendedor as $id => $grupo)
                         <tr>
-                            <td>Usuario #{{ $id }}</td>
-                            <td>{{ $grupo->count() }}</td>
-                            <td>Q {{ number_format($grupo->sum('total'), 2) }}</td>
+                            <td>{{ $grupo['nombre'] }}</td>
+                            <td>{{ $grupo['ventas'] }}</td>
+                            <td>{{ $grupo['vehiculos'] }}</td>
+                            <td>Q {{ number_format($grupo['monto'], 2) }}</td>
                     </tr>@empty<tr>
-                            <td colspan="3">No hay datos en el período.</td>
+                            <td colspan="4">No hay datos en el período.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -352,8 +355,9 @@
                     <tr>
                         <th>Venta</th>
                         <th>Fecha</th>
-                        <th>Cliente (ID)</th>
-                        <th>Vendedor (ID)</th>
+                        <th>Cliente</th>
+                        <th>Vendedor</th>
+                        <th>Vehículo(s)</th>
                         <th>Estado</th>
                         <th>Total</th>
                     </tr>
@@ -363,14 +367,22 @@
                         <tr>
                             <td>#{{ $v->id_venta }}</td>
                             <td>{{ $v->fecha_venta }}</td>
-                            <td>{{ $v->id_cliente }}</td>
-                            <td>{{ $v->id_usuario }}</td>
+                            <td>{{ trim(($v->cliente_nombre ?? '') . ' ' . ($v->cliente_apellido ?? '')) ?: 'Cliente #' . $v->id_cliente }}</td>
+                            <td>{{ trim(($v->persona_nombres ?? '') . ' ' . ($v->persona_apellidos ?? '')) ?: ($v->usuario_nombre ?: 'Usuario #' . $v->id_usuario) }}</td>
+                            <td>
+                                @forelse($detallesPorVenta->get($v->id_venta, collect()) as $detalle)
+                                    <div><strong>{{ trim(($detalle->marca_nombre ?? '') . ' ' . ($detalle->modelo_nombre ?? '')) ?: 'Vehículo #' . $detalle->id_vehiculo }}</strong></div>
+                                    <div class="report-muted">VIN: {{ $detalle->vin ?? 'Sin VIN' }} · Año: {{ $detalle->anio ?? 'N/D' }}</div>
+                                @empty
+                                    <span class="report-muted">Sin detalle de vehículo</span>
+                                @endforelse
+                            </td>
                             <td><span
                                     class="report-pill {{ $v->estado === 'CONFIRMADA' ? 'ok' : 'neutral' }}">{{ $v->estado }}</span>
                             </td>
                             <td>Q {{ number_format((float) $v->total, 2) }}</td>
                     </tr>@empty<tr>
-                            <td colspan="6">No se encontraron ventas.</td>
+                            <td colspan="7">No se encontraron ventas.</td>
                         </tr>
                     @endforelse
                 </tbody>

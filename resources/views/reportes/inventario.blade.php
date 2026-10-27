@@ -271,17 +271,11 @@
     @if ($vista === 'fifo')
         <div class="inv-section">@php
             $porPredio = $vehiculos->groupBy('id_predio')->map(fn($items) => $items->count())->sortKeys();
-            $etiquetas = $porPredio->keys()->map(fn($id) => 'Predio ' . $id)->values();
+            $etiquetas = $porPredio->keys()->map(fn($id) => ($predios->get($id)->nombre ?? 'Predio ' . $id))->values();
             $cantidades = $porPredio->values();
             $ordenados = $vehiculos->sortBy('orden_fifo');
         @endphp
-            <div class="report-head">
-                <div>
-                    <div class="report-kicker">Operaciones / FIFO</div>
-                    <h2 style="margin:6px 0">Inventario FIFO</h2>
-                    <p class="report-sub">Orden de ingreso y distribución de unidades por predio.</p>
-                </div><a href="{{ route('reportes.index') }}" class="btn">← Centro de reportes</a>
-            </div>
+
             <div class="report-stat-grid">
                 <div class="report-stat"><small>Vehículos en
                         reporte</small><strong>{{ $vehiculos->count() }}</strong><em>Registros disponibles en la vista
@@ -308,7 +302,10 @@
                 <p class="report-sub">El orden FIFO se presenta tal como lo calcula la vista Oracle.</p>
                 <div class="report-filter">
                     <div><label for="fifoBuscar">Buscar vehículo</label><input id="fifoBuscar"
-                            placeholder="VIN o ID de vehículo"></div>
+                            placeholder="VIN, marca, modelo o ID"></div>
+                    <div><label for="fifoPredio">Predio</label><select id="fifoPredio"><option value="">Todos los predios</option>
+                            @foreach($predios as $p)<option value="{{ $p->id_predio }}">{{ $p->nombre }}</option>@endforeach
+                        </select></div>
                     <div><label for="fifoEstado">Estado</label><select id="fifoEstado">
                             <option value="">Todos</option>
                             <option value="DISPONIBLE">Disponible</option>
@@ -324,7 +321,7 @@
                                 <th>Orden FIFO</th>
                                 <th>ID inventario</th>
                                 <th>Predio</th>
-                                <th>ID vehículo</th>
+                                <th>Vehículo</th>
                                 <th>VIN</th>
                                 <th>Condición</th>
                                 <th>Estado</th>
@@ -335,12 +332,13 @@
                         </thead>
                         <tbody>
                             @forelse($ordenados as $v)
-                                <tr data-search="{{ strtolower($v->vin . ' ' . $v->id_vehiculo) }}"
-                                    data-estado="{{ strtoupper($v->estado) }}">
+                                <tr data-search="{{ strtolower($v->vin . ' ' . $v->id_vehiculo . ' ' . ($detallesVehiculos->get($v->id_vehiculo)['marca'] ?? '') . ' ' . ($detallesVehiculos->get($v->id_vehiculo)['modelo'] ?? '')) }}"
+                                    data-estado="{{ strtoupper($v->estado) }}" data-predio="{{ $v->id_predio }}">
                                     <td><strong>{{ $v->orden_fifo }}</strong></td>
                                     <td>{{ $v->id_inventario }}</td>
-                                    <td>{{ $v->id_predio }}</td>
-                                    <td>{{ $v->id_vehiculo }}</td>
+                                    <td>{{ $predios->get($v->id_predio)->nombre ?? 'Predio ' . $v->id_predio }}</td>
+                                    <td><strong>{{ ($detallesVehiculos->get($v->id_vehiculo)['marca'] ?? '') . ' ' . ($detallesVehiculos->get($v->id_vehiculo)['modelo'] ?? '') }}</strong>
+                                        <div class="report-muted">#{{ $v->id_vehiculo }} · {{ $detallesVehiculos->get($v->id_vehiculo)['anio'] ?? 'Año no registrado' }}</div></td>
                                     <td>{{ $v->vin }}</td>
                                     <td>{{ $v->condicion }}</td>
                                     <td><span
@@ -393,6 +391,7 @@
                     });
                     const input = document.getElementById('fifoBuscar'),
                         select = document.getElementById('fifoEstado'),
+                        predio = document.getElementById('fifoPredio'),
                         rows = [...document.querySelectorAll('#fifoTabla tbody tr[data-search]')],
                         count = document.getElementById('fifoContador');
 
@@ -400,7 +399,7 @@
                         let n = 0;
                         rows.forEach(r => {
                             let show = r.dataset.search.includes(input.value.trim().toLowerCase()) && (!select
-                                .value || r.dataset.estado === select.value);
+                                .value || r.dataset.estado === select.value) && (!predio.value || r.dataset.predio === predio.value);
                             r.hidden = !show;
                             if (show) n++
                         });
@@ -408,9 +407,11 @@
                     }
                     input.addEventListener('input', filter);
                     select.addEventListener('change', filter);
+                    predio.addEventListener('change', filter);
                     document.getElementById('fifoLimpiar').addEventListener('click', () => {
                         input.value = '';
                         select.value = '';
+                        predio.value = '';
                         filter()
                     });
                     filter()
@@ -425,13 +426,7 @@
                 ->count();
             $alerta90 = $inventario->filter(fn($v) => (int) $v->dias_inventario > 90)->count();
         @endphp
-            <div class="report-head">
-                <div>
-                    <div class="report-kicker">Inventario / Antigüedad</div>
-                    <h2 style="margin:6px 0">Antigüedad del inventario</h2>
-                    <p class="report-sub">Identifica vehículos con permanencia prolongada en los predios.</p>
-                </div><a href="{{ route('reportes.index') }}" class="btn">← Centro de reportes</a>
-            </div>
+
             <div class="report-stat-grid">
                 <div class="report-stat"><small>Total
                         vehículos</small><strong>{{ $inventario->count() }}</strong><em>Unidades analizadas</em></div>
@@ -485,7 +480,10 @@
                 <h2>Detalle de vehículos</h2>
                 <p class="report-sub">Vehículos ordenados de mayor a menor antigüedad.</p>
                 <div class="report-filter">
-                    <div><label for="antBuscar">Buscar vehículo</label><input id="antBuscar" placeholder="VIN o ID"></div>
+                    <div><label for="antBuscar">Buscar vehículo</label><input id="antBuscar" placeholder="VIN, marca, modelo o ID"></div>
+                    <div><label for="antPredio">Predio</label><select id="antPredio"><option value="">Todos los predios</option>
+                            @foreach($predios as $p)<option value="{{ $p->id_predio }}">{{ $p->nombre }}</option>@endforeach
+                        </select></div>
                     <div><label for="antNivel">Nivel de alerta</label><select id="antNivel">
                             <option value="">Todos</option>
                             <option value="normal">Normal</option>
@@ -499,7 +497,7 @@
                         <thead>
                             <tr>
                                 <th>Predio</th>
-                                <th>ID vehículo</th>
+                                <th>Vehículo</th>
                                 <th>VIN</th>
                                 <th>Fecha ingreso</th>
                                 <th>Días</th>
@@ -515,10 +513,11 @@
                                     $nivel = $dias > 90 ? 'critica' : ($dias > 60 ? 'preventiva' : 'normal');
                                     $accion = $dias > 90 ? 'Evaluar reubicación o promoción' : ($dias > 60 ? 'Evaluar promoción' : 'Sin acción requerida');
                                 @endphp
-                                <tr data-search="{{ strtolower($v->vin . ' ' . $v->id_vehiculo) }}"
-                                    data-nivel="{{ $nivel }}">
-                                    <td>{{ $v->id_predio }}</td>
-                                    <td>{{ $v->id_vehiculo }}</td>
+                                <tr data-search="{{ strtolower($v->vin . ' ' . $v->id_vehiculo . ' ' . ($detallesVehiculos->get($v->id_vehiculo)['marca'] ?? '') . ' ' . ($detallesVehiculos->get($v->id_vehiculo)['modelo'] ?? '')) }}"
+                                    data-nivel="{{ $nivel }}" data-predio="{{ $v->id_predio }}">
+                                    <td>{{ $predios->get($v->id_predio)->nombre ?? 'Predio ' . $v->id_predio }}</td>
+                                    <td><strong>{{ ($detallesVehiculos->get($v->id_vehiculo)['marca'] ?? '') . ' ' . ($detallesVehiculos->get($v->id_vehiculo)['modelo'] ?? '') }}</strong>
+                                        <div class="report-muted">#{{ $v->id_vehiculo }} · {{ $detallesVehiculos->get($v->id_vehiculo)['anio'] ?? 'Año no registrado' }}</div></td>
                                     <td>{{ $v->vin }}</td>
                                     <td>{{ $v->fecha_ingreso ?? 'No registrada' }}</td>
                                     <td><strong>{{ $dias }}</strong></td>
@@ -574,6 +573,7 @@
                     });
                     const input = document.getElementById('antBuscar'),
                         select = document.getElementById('antNivel'),
+                        predio = document.getElementById('antPredio'),
                         rows = [...document.querySelectorAll('#antTabla tbody tr[data-search]')],
                         count = document.getElementById('antContador');
 
@@ -581,7 +581,7 @@
                         let n = 0;
                         rows.forEach(r => {
                             let show = r.dataset.search.includes(input.value.trim().toLowerCase()) && (!select
-                                .value || r.dataset.nivel === select.value);
+                                .value || r.dataset.nivel === select.value) && (!predio.value || r.dataset.predio === predio.value);
                             r.hidden = !show;
                             if (show) n++
                         });
@@ -589,9 +589,11 @@
                     }
                     input.addEventListener('input', filter);
                     select.addEventListener('change', filter);
+                    predio.addEventListener('change', filter);
                     document.getElementById('antLimpiar').addEventListener('click', () => {
                         input.value = '';
                         select.value = '';
+                        predio.value = '';
                         filter()
                     });
                     filter()
