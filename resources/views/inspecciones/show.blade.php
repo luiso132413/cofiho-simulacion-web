@@ -426,18 +426,21 @@
             <div class="det-notice">No es posible registrar un avalúo. Si el vehículo se repara,
                 deberá registrarse una nueva inspección.</div>
         </section>
-        @elseif ($inspeccion->avaluos->isNotEmpty())
-        <section class="det-card"><h3>Avalúo ya registrado</h3>
-            <p class="det-muted">Esta inspección ya tiene un avalúo. No se permiten duplicados.</p>
+        @elseif ($inspeccion->avaluos->contains(function ($avaluo) { return in_array(strtoupper((string) $avaluo->estado), ['PENDIENTE', 'APROBADO'], true); }))
+        <section class="det-card"><h3>Avalúo registrado</h3>
+            <p class="det-muted">Esta inspección tiene un avalúo pendiente de autorización o ya aprobado. No se pueden presentar propuestas adicionales.</p>
         </section>
         @elseif ($esUltimaInspeccion)
         <section class="det-card">
             <div class="det-head">
                 <div>
-                    <h3 style="margin-bottom:5px">Registrar nuevo avalúo</h3>
-                    <p class="det-muted" style="margin:0">Registra la valoración económica del vehículo inspeccionado.</p>
+                    <h3 style="margin-bottom:5px">{{ $inspeccion->avaluos->isNotEmpty() ? 'Presentar nueva propuesta de avalúo' : 'Registrar nuevo avalúo' }}</h3>
+                    <p class="det-muted" style="margin:0">{{ $inspeccion->avaluos->isNotEmpty() ? 'Los avalúos anteriores fueron rechazados. Registra una nueva propuesta sin repetir la inspección técnica.' : 'Registra la valoración económica del vehículo inspeccionado.' }}</p>
                 </div>
             </div>
+            @if ($inspeccion->avaluos->isNotEmpty())
+                <div class="det-notice">El historial de avalúos rechazados se conserva arriba. Revisa el motivo del rechazo antes de enviar una nueva propuesta; esta quedará PENDIENTE de aprobación administrativa.</div>
+            @endif
             @if ($sugerencia)
                 <div class="det-grid" style="margin-bottom:16px">
                     <div class="det-item"><small>Precio de lista actual</small><strong>Q {{ number_format($sugerencia['precio_base'], 2) }}</strong></div>
