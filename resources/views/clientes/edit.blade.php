@@ -27,12 +27,7 @@
                         type="text" maxlength="100" required value="{{ old('nombre', $cliente->nombre) }}"></div>
                 <div class="cl-field"><label for="apellido">Apellido *</label><input id="apellido" name="apellido"
                         type="text" maxlength="100" required value="{{ old('apellido', $cliente->apellido) }}"></div>
-                <div class="cl-field"><label for="tipo_cliente">Tipo de cliente *</label><select id="tipo_cliente"
-                        name="tipo_cliente" required>
-                        <option value="INDIVIDUAL" @selected(old('tipo_cliente', $cliente->tipo_cliente) === 'INDIVIDUAL')>Individual</option>
-                        <option value="EMPRESARIAL" @selected(old('tipo_cliente', $cliente->tipo_cliente) === 'EMPRESARIAL')>Empresarial</option>
-                    </select></div>
-                <div class="cl-field"><label for="dpi">DPI</label><input id="dpi" nam   e="dpi" maxlength="20"
+                <div class="cl-field"><label for="dpi">DPI</label><input id="dpi" name="dpi" maxlength="20"
                         value="{{ old('dpi', $cliente->dpi) }}"></div>
                 <div class="cl-field"><label for="nit">NIT</label><input id="nit" name="nit" maxlength="20"
                         value="{{ old('nit', $cliente->nit) }}"></div>

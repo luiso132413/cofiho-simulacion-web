@@ -31,6 +31,15 @@ Route::middleware('rol:ADMINISTRADOR,VENDEDOR,INSPECTOR')->group(function () {
     Route::get('/vehiculos', [VehiculoController::class, 'index'])
         ->name('vehiculos.index');
 
+    // Registro de vehículos - Solo ADMINISTRADOR
+    Route::middleware('rol:ADMINISTRADOR')->group(function () {
+        Route::get('/vehiculos/create', [VehiculoController::class, 'create'])
+            ->name('vehiculos.create');
+
+        Route::post('/vehiculos', [VehiculoController::class, 'store'])
+            ->name('vehiculos.store');
+    });
+
 });
 // Inventario - Todos los roles
 Route::middleware('rol:ADMINISTRADOR,VENDEDOR,INSPECTOR')->group(function () {
@@ -47,6 +56,10 @@ Route::middleware('rol:ADMINISTRADOR,VENDEDOR')->group(function () {
     // Listado de clientes
     Route::get('/clientes', [ClienteController::class, 'index'])
         ->name('clientes.index');
+
+    // Registrar clientes individuales
+    Route::get('/clientes/create', [ClienteController::class, 'create'])->name('clientes.create');
+    Route::post('/clientes', [ClienteController::class, 'store'])->name('clientes.store');
 
     // Formulario para editar cliente
     Route::get('/clientes/{id}/edit', [ClienteController::class, 'edit'])
@@ -169,7 +182,6 @@ Route::middleware('rol:ADMINISTRADOR,INSPECTOR')->group(function () {
     Route::post('/inspecciones/avaluos', [InspeccionController::class, 'storeAvaluo'])
         ->name('inspecciones.avaluos.store');
 
-    Route::patch('/inspecciones/{id}/finalizar', [InspeccionController::class, 'finalizar'])->name('inspecciones.finalizar'); // si ya existe, NO duplicar
 
 Route::patch('/inspecciones/avaluos/{id}/decidir', [InspeccionController::class, 'decidirAvaluo'])->middleware('rol:ADMINISTRADOR')->name('inspecciones.avaluos.decidir');
 

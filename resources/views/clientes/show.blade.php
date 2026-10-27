@@ -19,8 +19,6 @@
         <p class="cl-sub">Datos disponibles en el registro actual.</p>
         <div class="cl-profile">
             <div class="cl-info"><small>Identificador</small><strong>#{{ $cliente->id_cliente }}</strong></div>
-            <div class="cl-info"><small>Tipo de cliente</small><strong>{{ $cliente->tipo_cliente ?? 'No definido' }}</strong>
-            </div>
             <div class="cl-info"><small>Nombre</small><strong>{{ $cliente->nombre }}</strong></div>
             <div class="cl-info"><small>Apellido</small><strong>{{ $cliente->apellido }}</strong></div>
             <div class="cl-info"><small>DPI</small><strong>{{ $cliente->dpi ?? 'No registrado' }}</strong></div>

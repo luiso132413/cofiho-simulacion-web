@@ -337,10 +337,12 @@
                         $precioActual = (float) ($inspeccion->vehiculo->precio_lista ?? 0);
                         $precioAvaluado = (float) $avaluo->valor_estimado;
                         $precioCoincide = abs($precioActual - $precioAvaluado) < 0.005;
-                        $vehiculoDisponible = strtoupper((string) ($inspeccion->vehiculo->estado ?? '')) === 'DISPONIBLE';
+                        $estadoVehiculo = strtoupper((string) ($inspeccion->vehiculo->estado ?? ''));
+                        $vehiculoDisponible = $estadoVehiculo === 'DISPONIBLE';
+                        $vehiculoEnTaller = $estadoVehiculo === 'TALLER';
                     @endphp
                     <section class="det-card">
-                        @if ($precioCoincide)
+                        @if ($precioCoincide && !$vehiculoEnTaller)
                             <h3><span class="det-pill det-ok">✓</span> Precio comercial vigente</h3>
                             <p class="det-muted">El precio de lista coincide con el avalúo aprobado #{{ $avaluo->id_avaluo }}. No se requiere una nueva actualización.</p>
                             <div class="det-grid">
@@ -352,14 +354,14 @@
                                 <div class="det-item"><small>Estado / condición</small><strong>{{ $inspeccion->vehiculo->estado ?? 'No disponible' }} / {{ $inspeccion->vehiculo->condicion ?? 'No disponible' }}</strong></div>
                             </div>
                             <p class="det-muted" style="margin-top:14px">El sistema no conserva el precio anterior en un historial específico. La coincidencia de importes no demuestra por sí sola cuándo se aplicó el avalúo.</p>
-                        @elseif ($vehiculoDisponible)
-                            <h3>Actualizar precio comercial</h3>
-                            <p class="det-muted">Precio actual: Q {{ number_format($precioActual, 2) }} · Avalúo aprobado: Q {{ number_format($precioAvaluado, 2) }}. Esta operación modifica PRECIO_LISTA y no conserva el precio anterior en un historial específico.</p>
-                            <form method="POST" action="{{ route('vehiculos.precio.actualizar', $inspeccion->id_vehiculo) }}" onsubmit="return confirm('¿Confirmas que deseas reemplazar el precio de lista por el valor del avalúo aprobado?');">
+                        @elseif ($vehiculoDisponible || $vehiculoEnTaller)
+                            <h3>{{ $vehiculoEnTaller ? 'Habilitar vehículo para comercialización' : 'Actualizar precio comercial' }}</h3>
+                            <p class="det-muted">Precio actual: Q {{ number_format($precioActual, 2) }} · Avalúo aprobado: Q {{ number_format($precioAvaluado, 2) }}. {{ $vehiculoEnTaller ? 'La inspección y el avalúo están aprobados. Al confirmar, el vehículo pasará de TALLER a DISPONIBLE, incluso si el precio ya coincide.' : 'Esta operación modifica PRECIO_LISTA y no conserva el precio anterior en un historial específico.' }}</p>
+                            <form method="POST" action="{{ route('vehiculos.precio.actualizar', $inspeccion->id_vehiculo) }}" onsubmit="return confirm('¿Confirmas la aplicación del avalúo aprobado y la habilitación comercial si el vehículo está en TALLER?');">
                                 @csrf @method('PATCH')
                                 <input type="hidden" name="id_avaluo" value="{{ $avaluo->id_avaluo }}">
-                                <label><input type="checkbox" name="confirmar" value="1" required> Confirmo el cambio de precio comercial</label>
-                                <div style="text-align:right;margin-top:12px"><button type="submit" class="det-btn">Actualizar precio del vehículo</button></div>
+                                <label><input type="checkbox" name="confirmar" value="1" required> {{ $vehiculoEnTaller ? 'Confirmo la habilitación comercial y el precio aprobado' : 'Confirmo el cambio de precio comercial' }}</label>
+                                <div style="text-align:right;margin-top:12px"><button type="submit" class="det-btn">{{ $vehiculoEnTaller ? 'Habilitar para comercialización' : 'Actualizar precio del vehículo' }}</button></div>
                             </form>
                         @else
                             <h3>Actualización de precio no disponible</h3>

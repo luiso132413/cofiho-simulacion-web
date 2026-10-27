@@ -6,9 +6,6 @@
         $totalClientes = $clientes->count();
         $clientesActivos = $clientes->filter(fn($c) => (int) $c->activo === 1)->count();
         $clientesInactivos = $totalClientes - $clientesActivos;
-        $clientesEmpresariales = $clientes
-            ->filter(fn($c) => strtoupper(trim((string) $c->tipo_cliente)) === 'EMPRESARIAL')
-            ->count();
     @endphp
     <div class="cl-head">
         <div>
@@ -16,18 +13,18 @@
             <h2>Directorio de clientes</h2>
             <p>Consulta, actualiza y administra los clientes registrados en COFIHO V2.</p>
         </div>
+        <a href="{{ route('clientes.create') }}" class="cl-btn">+ Nuevo cliente</a>
     </div>
     <div class="cl-stats">
         <div class="cl-stat"><span>Total de clientes</span><strong>{{ $totalClientes }}</strong></div>
         <div class="cl-stat"><span>Clientes activos</span><strong>{{ $clientesActivos }}</strong></div>
         <div class="cl-stat"><span>Clientes inactivos</span><strong>{{ $clientesInactivos }}</strong></div>
-        <div class="cl-stat"><span>Clientes empresariales</span><strong>{{ $clientesEmpresariales }}</strong></div>
     </div>
     <div class="cl-panel">
         <h3>Clientes registrados</h3>
         <p class="cl-sub">Utiliza la búsqueda y los filtros para encontrar un cliente.</p>
         <div class="table-responsive">
-            <table class="cl-table" data-filtrable data-filtros="Tipo de cliente,Estado">
+            <table class="cl-table" data-filtrable data-filtros="Estado">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -49,7 +46,6 @@
                             <td>
                                 <div class="cl-name">{{ $cliente->nombre }} {{ $cliente->apellido }}</div>
                             </td>
-                            <td>{{ $cliente->tipo_cliente ?? 'No definido' }}</td>
                             <td>{{ $cliente->dpi ?? 'No registrado' }}</td>
                             <td>{{ $cliente->nit ?? 'No registrado' }}</td>
                             <td>{{ $cliente->telefono ?? 'No registrado' }}</td>
@@ -77,7 +73,7 @@
                             </td>
                         </tr>
                     @empty<tr>
-                            <td colspan="10" style="text-align:center;padding:35px">No hay clientes registrados.</td>
+                            <td colspan="9" style="text-align:center;padding:35px">No hay clientes registrados.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -116,7 +112,7 @@
 
         .cl-stats {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 14px;
             margin-bottom: 22px
         }
