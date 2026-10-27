@@ -5,21 +5,82 @@ namespace App\Http\Controllers;
 use App\Models\Reserva;
 use App\Services\ReservaService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Throwable;
 
 class ReservaController extends Controller
 {
     public function index()
     {
-        $reservas = Reserva::orderBy('id_reserva', 'desc')
+        $db = \Illuminate\Support\Facades\DB::connection('oracle');
+        $reservas = $db->table('RESERVA as R')
+            ->join('CLIENTE as C', 'C.ID_CLIENTE', '=', 'R.ID_CLIENTE')
+            ->join('VEHICULO as V', 'V.ID_VEHICULO', '=', 'R.ID_VEHICULO')
+            ->join('MODELO as MO', 'MO.ID_MODELO', '=', 'V.ID_MODELO')
+            ->join('MARCA as MA', 'MA.ID_MARCA', '=', 'MO.ID_MARCA')
+            ->select('R.*', 'C.NOMBRE as cliente_nombre', 'C.APELLIDO as cliente_apellido',
+                'MA.NOMBRE as vehiculo_marca', 'MO.NOMBRE as vehiculo_modelo',
+                'V.PLACA as vehiculo_placa', 'V.ANIO as vehiculo_anio')
+            ->orderBy('R.ID_RESERVA', 'desc')
             ->get();
 
-        return view('reservas.index', compact('reservas'));
+        $modelos = $db->table('MODELO as MO')
+            ->join('MARCA as MA', 'MA.ID_MARCA', '=', 'MO.ID_MARCA')
+            ->select('MO.ID_MODELO as id_modelo', 'MO.NOMBRE as modelo', 'MA.NOMBRE as marca')
+            ->orderBy('MA.NOMBRE')
+            ->orderBy('MO.NOMBRE')
+            ->get();
+
+        $vehiculosDisponibles = $db->table('VEHICULO as V')
+            ->join('MODELO as MO', 'MO.ID_MODELO', '=', 'V.ID_MODELO')
+            ->join('MARCA as MA', 'MA.ID_MARCA', '=', 'MO.ID_MARCA')
+            ->where('V.ESTADO', 'DISPONIBLE')
+            ->select('V.ID_VEHICULO as id_vehiculo', 'V.VIN as vin',
+                'V.ANIO as anio', 'V.COLOR as color', 'V.CONDICION as condicion',
+                'V.PRECIO_LISTA as precio_lista', 'MO.NOMBRE as modelo',
+                'MA.NOMBRE as marca')
+            ->orderBy('MA.NOMBRE')
+            ->orderBy('MO.NOMBRE')
+            ->orderBy('V.ANIO')
+            ->get();
+
+        $vehiculosFIFO = $db->table('INVENTARIO_PREDIO as I')
+            ->join('VEHICULO as V', 'V.ID_VEHICULO', '=', 'I.ID_VEHICULO')
+            ->join('MODELO as MO', 'MO.ID_MODELO', '=', 'V.ID_MODELO')
+            ->join('MARCA as MA', 'MA.ID_MARCA', '=', 'MO.ID_MARCA')
+            ->whereNull('I.FECHA_SALIDA')
+            ->where('V.ESTADO', 'DISPONIBLE')
+            ->where('V.CONDICION', 'NUEVO')
+            ->select('I.ID_PREDIO as id_predio', 'I.ID_INVENTARIO as id_inventario',
+                'I.FECHA_INGRESO as fecha_ingreso', 'V.ID_VEHICULO as id_vehiculo',
+                'V.ID_MODELO as id_modelo', 'V.ANIO as anio', 'V.COLOR as color',
+                'V.PRECIO_LISTA as precio_lista', 'MO.NOMBRE as modelo', 'MA.NOMBRE as marca')
+            ->orderBy('I.FECHA_INGRESO')
+            ->orderBy('I.ID_INVENTARIO')
+            ->get();
+
+        $clientes = \App\Models\Cliente::where('activo', 1)
+            ->orderBy('nombre')
+            ->orderBy('apellido')
+            ->get();
+
+        return view('reservas.index', compact('reservas', 'modelos', 'clientes', 'vehiculosDisponibles', 'vehiculosFIFO'));
     }
 
     public function show($id)
     {
-        $reserva = Reserva::findOrFail($id);
+        $db = \Illuminate\Support\Facades\DB::connection('oracle');
+        $reserva = $db->table('RESERVA as R')
+            ->join('CLIENTE as C', 'C.ID_CLIENTE', '=', 'R.ID_CLIENTE')
+            ->join('VEHICULO as V', 'V.ID_VEHICULO', '=', 'R.ID_VEHICULO')
+            ->join('MODELO as MO', 'MO.ID_MODELO', '=', 'V.ID_MODELO')
+            ->join('MARCA as MA', 'MA.ID_MARCA', '=', 'MO.ID_MARCA')
+            ->select('R.*', 'C.NOMBRE as cliente_nombre', 'C.APELLIDO as cliente_apellido',
+                'MA.NOMBRE as vehiculo_marca', 'MO.NOMBRE as vehiculo_modelo',
+                'V.PLACA as vehiculo_placa', 'V.ANIO as vehiculo_anio')
+            ->where('R.ID_RESERVA', $id)
+            ->first();
+        abort_if(!$reserva, 404);
 
         $totales = \Illuminate\Support\Facades\DB::connection('oracle')
             ->table('TRANSACCION_FINANCIERA')
@@ -39,9 +100,16 @@ class ReservaController extends Controller
     public function store(Request $request, ReservaService $reservaService)
     {
         $datos = $request->validate([
-            'id_cliente' => 'required|integer|min:1',
+            
+'id_cliente' => [
+    'required',
+    'integer',
+    Rule::exists('oracle.CLIENTE', 'ID_CLIENTE')
+        ->where('ACTIVO', 1),
+],
+
             'id_vehiculo' => 'required|integer|min:1',
-            'id_usuario' => 'nullable|integer|min:1',
+            
             'canal' => 'required|string|max:50',
         ]);
 
@@ -49,9 +117,7 @@ class ReservaController extends Controller
             $idReserva = $reservaService->crearReserva(
                 (int) $datos['id_cliente'],
                 (int) $datos['id_vehiculo'],
-                isset($datos['id_usuario'])
-                    ? (int) $datos['id_usuario']
-                    : null,
+                (int) $request->user()->id_usuario,
                 $datos['canal']
             );
 
@@ -73,19 +139,49 @@ class ReservaController extends Controller
     {
         $datos = $request->validate([
             'id_predio' => 'required|integer|min:1',
-            'id_cliente' => 'required|integer|min:1',
-            'id_usuario' => 'nullable|integer|min:1',
+            
+'id_cliente' => [
+    'required',
+    'integer',
+    Rule::exists('oracle.CLIENTE', 'ID_CLIENTE')
+        ->where('ACTIVO', 1),
+],
+
+            'id_modelo' => 'required|integer|min:1',
+            
             'canal' => 'required|string|max:50',
         ]);
 
         try {
+            // Se vuelve a consultar el primer vehículo elegible al confirmar.
+            // El procedimiento PL/SQL conserva el bloqueo y la selección definitiva.
+            $primero = \Illuminate\Support\Facades\DB::connection('oracle')
+                ->table('INVENTARIO_PREDIO as I')
+                ->join('VEHICULO as V', 'V.ID_VEHICULO', '=', 'I.ID_VEHICULO')
+                ->where('I.ID_PREDIO', (int) $datos['id_predio'])
+                ->where('V.ID_MODELO', (int) $datos['id_modelo'])
+                ->whereNull('I.FECHA_SALIDA')
+                ->where('V.ESTADO', 'DISPONIBLE')
+                ->where('V.CONDICION', 'NUEVO')
+                ->orderBy('I.FECHA_INGRESO')
+                ->orderBy('I.ID_INVENTARIO')
+                ->select('V.ANIO as anio', 'V.COLOR as color')
+                ->first();
+
+            if (!$primero) {
+                return back()->withInput()->withErrors([
+                    'reserva' => 'No se cuenta con vehículos disponibles de este modelo en el predio seleccionado.',
+                ]);
+            }
+
             $resultado = $reservaService->reservarFIFO(
                 (int) $datos['id_predio'],
                 (int) $datos['id_cliente'],
-                isset($datos['id_usuario'])
-                    ? (int) $datos['id_usuario']
-                    : null,
-                $datos['canal']
+                (int) $request->user()->id_usuario,
+                $datos['canal'],
+                (int) $datos['id_modelo'],
+                (int) $primero->anio,
+                trim($primero->color)
             );
 
             return redirect()
@@ -176,9 +272,16 @@ class ReservaController extends Controller
 public function checkout(Request $request, ReservaService $reservaService)
 {
     $datos = $request->validate([
-        'id_cliente' => 'required|integer|min:1',
+        
+'id_cliente' => [
+    'required',
+    'integer',
+    Rule::exists('oracle.CLIENTE', 'ID_CLIENTE')
+        ->where('ACTIVO', 1),
+],
+
         'id_vehiculo' => 'required|integer|min:1',
-        'id_usuario' => 'nullable|integer|min:1',
+        
         'canal' => 'required|string|max:50',
         'id_metodo_pago' => 'required|integer|min:1',
         'monto_enganche' => 'required|numeric|gt:0',
@@ -189,9 +292,7 @@ public function checkout(Request $request, ReservaService $reservaService)
         $resultado = $reservaService->checkoutReserva(
             (int) $datos['id_cliente'],
             (int) $datos['id_vehiculo'],
-            isset($datos['id_usuario'])
-                ? (int) $datos['id_usuario']
-                : null,
+            (int) $request->user()->id_usuario,
             $datos['canal'],
             (int) $datos['id_metodo_pago'],
             (float) $datos['monto_enganche'],

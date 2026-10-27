@@ -4,299 +4,335 @@
 @section('content')
     <style>
         .fin-wrap {
-            max-width: 1400px;
-            margin: 22px auto;
-            padding: 0 18px;
-            color: #142443
+            display: grid;
+            gap: 20px
         }
 
-        .fin-head {
+        .fin-heading {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 12px;
-            margin-bottom: 18px
+            gap: 16px;
+            flex-wrap: wrap
         }
 
-        .fin-head h2 {
+        .fin-heading h2 {
             font-size: 21px;
-            font-weight: 800;
-            margin: 0 0 4px
+            margin: 0 0 6px;
+            color: #14233d
         }
 
-        .fin-sub {
-            font-size: 12px;
-            color: #7081a3;
+        .fin-muted {
+            font-size: 13px;
+            color: #71809a;
             margin: 0
-        }
-
-        .fin-card {
-            background: white;
-            border: 1px solid #e1e8f4;
-            border-radius: 13px;
-            padding: 19px;
-            margin-bottom: 16px
         }
 
         .fin-grid {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 12px;
-            margin-bottom: 16px
+            gap: 14px
         }
 
-        .fin-grid.two {
-            grid-template-columns: repeat(2, minmax(0, 1fr))
-        }
-
-        .fin-metric {
+        .fin-stat {
+            padding: 20px;
+            border: 1px solid #e6ecf5;
+            border-radius: 14px;
             background: white;
-            border: 1px solid #e1e8f4;
-            border-radius: 12px;
-            padding: 17px
+            box-shadow: 0 4px 16px #14233d06
         }
 
-        .fin-metric small,
-        .fin-label {
+        .fin-stat .label {
+            font-size: 12px;
+            color: #71809a;
+            font-weight: 700
+        }
+
+        .fin-stat .value {
+            font-size: 24px;
+            font-weight: 800;
+            color: #14233d;
+            margin-top: 10px
+        }
+
+        .fin-stat .hint {
+            font-size: 11px;
+            color: #8795aa;
+            margin-top: 5px
+        }
+
+        .fin-panel {
+            background: #fff;
+            border: 1px solid #e6ecf5;
+            border-radius: 15px;
+            padding: 22px;
+            box-shadow: 0 4px 18px #14233d06
+        }
+
+        .fin-panel h3 {
+            font-size: 16px;
+            margin: 0 0 6px;
+            color: #14233d
+        }
+
+        .fin-filters {
+            display: grid;
+            grid-template-columns: 2fr repeat(2, 1fr) auto;
+            gap: 12px;
+            align-items: end;
+            margin: 20px 0 14px;
+            padding: 16px;
+            background: #f7f9fd;
+            border: 1px solid #e6ecf5;
+            border-radius: 12px
+        }
+
+        .fin-field label {
             display: block;
-            font-size: 11px;
-            color: #667a9d;
+            font-size: 12px;
             font-weight: 700;
-            margin-bottom: 8px
+            margin-bottom: 7px;
+            color: #42516b
         }
 
-        .fin-metric strong {
-            font-size: 22px;
-            color: #0e2247
+        .fin-field input,
+        .fin-field select {
+            width: 100%;
+            height: 40px;
+            padding: 0 11px;
+            border: 1px solid #dbe3ef;
+            border-radius: 9px;
+            background: white;
+            color: #14233d;
+            min-width: 0
         }
 
-        .fin-metric p {
-            font-size: 11px;
-            color: #8190ab;
-            margin: 5px 0 0
+        .fin-action {
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            gap: 6px;
+            padding: 11px 15px;
+            border-radius: 9px;
+            background: #2563eb;
+            color: white !important;
+            text-decoration: none;
+            border: 0;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap
         }
 
-        .fin-scroll {
+        .fin-action.secondary {
+            background: #edf2fa;
+            color: #334664 !important
+        }
+
+        .fin-table-scroll {
             overflow-x: auto
         }
 
         .fin-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 12px
+            font-size: 12px;
+            min-width: 850px
         }
 
         .fin-table th {
-            background: #f0f4fa;
-            color: #435b84;
+            padding: 13px 12px;
+            background: #f2f5fa;
+            color: #536582;
             text-transform: uppercase;
             letter-spacing: .05em;
             text-align: left;
             font-size: 10px;
-            padding: 13px 11px
+            white-space: nowrap
         }
 
         .fin-table td {
-            padding: 12px 11px;
-            border-bottom: 1px solid #edf1f7
+            padding: 14px 12px;
+            border-bottom: 1px solid #edf1f7;
+            color: #34425b
         }
 
-        .fin-table tr:last-child td {
-            border-bottom: 0
+        .fin-table tbody tr:hover {
+            background: #f8faff
+        }
+
+        .fin-table .money {
+            font-weight: 800;
+            color: #14233d;
+            white-space: nowrap
         }
 
         .fin-pill {
             display: inline-block;
-            border-radius: 20px;
-            padding: 5px 9px;
-            font-weight: 800;
+            border-radius: 99px;
+            padding: 5px 10px;
             font-size: 10px;
-            background: #e6eeff;
-            color: #2256c5
+            font-weight: 800;
+            background: #edf2fa;
+            color: #536582
         }
 
-        .fin-pill.ok {
-            background: #ddf9e7;
-            color: #087943
+        .fin-pill.green {
+            background: #dcfce7;
+            color: #166534
         }
 
-        .fin-pill.warn {
-            background: #fff0cc;
-            color: #a65b00
+        .fin-pill.red {
+            background: #fee2e2;
+            color: #991b1b
         }
 
-        .fin-pill.bad {
-            background: #ffe4e4;
-            color: #a92828
+        .fin-pill.blue {
+            background: #dbeafe;
+            color: #1d4ed8
         }
 
-        .fin-btn {
-            display: inline-block;
-            background: #245ce7;
-            color: #fff !important;
-            text-decoration: none;
-            padding: 9px 12px;
-            border-radius: 8px;
+        .fin-pill.amber {
+            background: #fef3c7;
+            color: #92400e
+        }
+
+        .fin-count {
+            color: #71809a;
+            font-size: 12px;
+            margin-bottom: 12px
+        }
+
+        .fin-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px
+        }
+
+        .fin-detail-item {
+            border: 1px solid #e6ecf5;
+            background: #f8fafd;
+            border-radius: 10px;
+            padding: 15px;
+            min-width: 0
+        }
+
+        .fin-detail-item span {
+            display: block;
+            color: #71809a;
             font-size: 11px;
-            font-weight: 700
+            font-weight: 700;
+            margin-bottom: 8px
         }
 
-        .fin-btn.secondary {
-            background: #eef2f9;
-            color: #1c3764 !important
+        .fin-detail-item strong {
+            display: block;
+            color: #14233d;
+            font-size: 14px;
+            overflow-wrap: anywhere
         }
 
         .fin-actions {
             display: flex;
-            gap: 9px;
-            flex-wrap: wrap;
-            margin-top: 14px
-        }
-
-        .fin-fields {
-            display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 10px
-        }
-
-        .fin-field {
-            background: #f7f9fd;
-            border: 1px solid #e4ebf6;
-            border-radius: 8px;
-            padding: 13px;
-            overflow-wrap: anywhere
-        }
-
-        .fin-field strong {
-            font-size: 13px
-        }
-
-        .fin-section-title {
-            font-size: 15px;
-            font-weight: 800;
-            margin: 0 0 4px
-        }
-
-        .fin-filter {
-            display: flex;
             gap: 10px;
-            flex-wrap: wrap;
-            align-items: end;
-            background: #f7f9fd;
-            border: 1px solid #e5ebf6;
-            border-radius: 10px;
-            padding: 12px;
-            margin: 16px 0
+            flex-wrap: wrap
         }
 
-        .fin-filter label {
-            font-size: 11px;
-            color: #54698e;
-            font-weight: 700;
-            flex: 1;
-            min-width: 150px
+        .fin-empty {
+            text-align: center;
+            padding: 35px !important;
+            color: #71809a !important
         }
 
-        .fin-filter input,
-        .fin-filter select {
-            display: block;
-            width: 100%;
-            margin-top: 5px;
-            border: 1px solid #dce4f0;
-            border-radius: 7px;
-            padding: 9px;
-            background: white;
-            color: #1a3155
-        }
-
-        .fin-filter button {
-            border: 0;
-            border-radius: 7px;
-            padding: 10px 13px;
-            background: #eaf0fa;
-            color: #294b7c;
-            cursor: pointer
-        }
-
-        .fin-note {
-            color: #8291ab;
-            font-size: 11px
-        }
-
-        .fin-num {
-            font-variant-numeric: tabular-nums;
-            font-weight: 750;
-            white-space: nowrap
-        }
-
-        @media(max-width:800px) {
+        @media(max-width:1100px) {
             .fin-grid {
                 grid-template-columns: repeat(2, minmax(0, 1fr))
             }
 
-            .fin-fields {
-                grid-template-columns: 1fr
+            .fin-filters {
+                grid-template-columns: repeat(2, minmax(0, 1fr))
             }
         }
 
-        @media(max-width:500px) {
+        @media(max-width:650px) {
 
             .fin-grid,
-            .fin-grid.two {
+            .fin-filters,
+            .fin-detail-grid {
                 grid-template-columns: 1fr
+            }
+
+            .fin-panel {
+                padding: 15px
             }
         }
     </style>
     @php
-        $aprobadas = $transacciones->filter(fn($t) => strtoupper((string) $t->estado) === 'APROBADA');
-        $pagos = $aprobadas->filter(fn($t) => strtoupper((string) $t->tipo) === 'PAGO')->sum('monto');
-        $enganches = $aprobadas->filter(fn($t) => strtoupper((string) $t->tipo) === 'ENGANCHE')->sum('monto');
-        $devoluciones = $aprobadas->filter(fn($t) => strtoupper((string) $t->tipo) === 'DEVOLUCION')->sum('monto');
+        $aprobadas = $transacciones->filter(fn($t) => strtoupper(trim((string) $t->estado)) === 'APROBADA');
+        $pagos = $aprobadas->filter(fn($t) => strtoupper(trim((string) $t->tipo)) === 'PAGO')->sum('monto');
+        $enganches = $aprobadas->filter(fn($t) => strtoupper(trim((string) $t->tipo)) === 'ENGANCHE')->sum('monto');
+        $devoluciones = $aprobadas
+            ->filter(fn($t) => strtoupper(trim((string) $t->tipo)) === 'DEVOLUCION')
+            ->sum('monto');
+        $neto = $pagos + $enganches - $devoluciones;
     @endphp
     <div class="fin-wrap">
-        <div class="fin-head">
+        <div class="fin-heading">
             <div>
                 <h2>Resumen financiero</h2>
-                <p class="fin-sub">Consulta las operaciones registradas y su estado de aprobación.</p>
-            </div><span class="fin-pill">{{ $transacciones->count() }} transacciones</span>
+                <p class="fin-muted">Consulta las operaciones registradas y su estado de aprobación.</p>
+            </div><span class="fin-pill blue">{{ $transacciones->count() }} transacciones</span>
         </div>
         <div class="fin-grid">
-            <div class="fin-metric"><small>Pagos aprobados</small><strong>Q {{ number_format($pagos, 2) }}</strong>
-                <p>Transacciones de tipo PAGO</p>
+            <div class="fin-stat">
+                <div class="label">Pagos aprobados</div>
+                <div class="value">Q {{ number_format($pagos, 2) }}</div>
+                <div class="hint">Transacciones de tipo PAGO</div>
             </div>
-            <div class="fin-metric"><small>Enganches aprobados</small><strong>Q {{ number_format($enganches, 2) }}</strong>
-                <p>Transacciones de tipo ENGANCHE</p>
+            <div class="fin-stat">
+                <div class="label">Enganches aprobados</div>
+                <div class="value">Q {{ number_format($enganches, 2) }}</div>
+                <div class="hint">Transacciones de tipo ENGANCHE</div>
             </div>
-            <div class="fin-metric"><small>Devoluciones aprobadas</small><strong>Q
-                    {{ number_format($devoluciones, 2) }}</strong>
-                <p>Montos devueltos</p>
+            <div class="fin-stat">
+                <div class="label">Devoluciones aprobadas</div>
+                <div class="value">Q {{ number_format($devoluciones, 2) }}</div>
+                <div class="hint">Montos devueltos</div>
             </div>
-            <div class="fin-metric"><small>Flujo neto registrado</small><strong>Q
-                    {{ number_format($pagos + $enganches - $devoluciones, 2) }}</strong>
-                <p>Pagos + enganches − devoluciones; no equivale a conciliación</p>
+            <div class="fin-stat">
+                <div class="label">Flujo neto registrado</div>
+                <div class="value">Q {{ number_format($neto, 2) }}</div>
+                <div class="hint">Pagos + enganches − devoluciones; no equivale a conciliación</div>
             </div>
         </div>
-        <div class="fin-card">
-            <h3 class="fin-section-title">Historial de transacciones</h3>
-            <p class="fin-sub">Filtra por identificador, tipo o estado de la operación.</p>
-            <div class="fin-filter"><label>Buscar transacción<input id="finBuscar"
-                        placeholder="ID de transacción, venta o reserva" oninput="finFiltrar()"></label><label>Tipo<select
-                        id="finTipo" onchange="finFiltrar()">
+        <div class="fin-panel">
+            <h3>Historial de transacciones</h3>
+            <p class="fin-muted">Filtra por identificador, tipo o estado de la operación.</p>
+            <div class="fin-filters">
+                <div class="fin-field"><label for="buscarFinanza">Buscar transacción</label><input type="search"
+                        id="buscarFinanza" placeholder="ID de transacción, venta o reserva" oninput="filtrarFinanzas()">
+                </div>
+                <div class="fin-field"><label for="filtroTipo">Tipo</label><select id="filtroTipo"
+                        onchange="filtrarFinanzas()">
                         <option value="">Todos los tipos</option>
-                        <option>PAGO</option>
-                        <option>ENGANCHE</option>
-                        <option>DEVOLUCION</option>
-                    </select></label><label>Estado<select id="finEstado" onchange="finFiltrar()">
-                        <option value="">Todos los estados</option>
-                        @foreach ($transacciones->pluck('estado')->unique()->filter() as $estado)
-                            <option value="{{ strtoupper($estado) }}">{{ $estado }}</option>
+                        @foreach ($transacciones->pluck('tipo')->filter()->unique()->sort() as $tipo)
+                            <option value="{{ $tipo }}">{{ $tipo }}</option>
                         @endforeach
-                    </select></label><button type="button"
-                    onclick="document.getElementById('finBuscar').value='';document.getElementById('finTipo').value='';document.getElementById('finEstado').value='';finFiltrar()">Limpiar
-                    filtros</button></div>
-            <p class="fin-note" id="finConteo">Mostrando {{ $transacciones->count() }} transacciones</p>
-            <div class="fin-scroll">
-                <table class="fin-table">
+                    </select>
+                </div>
+                <div class="fin-field"><label for="filtroEstado">Estado</label><select id="filtroEstado"
+                        onchange="filtrarFinanzas()">
+                        <option value="">Todos los estados</option>
+                        @foreach ($transacciones->pluck('estado')->filter()->unique()->sort() as $estado)
+                            <option value="{{ $estado }}">{{ $estado }}</option>
+                        @endforeach
+                    </select></div>
+                <button type="button" class="fin-action secondary" onclick="limpiarFiltrosFinanzas()">Limpiar
+                    filtros</button>
+            </div>
+            <div id="contadorFinanzas" class="fin-count">Mostrando {{ $transacciones->count() }} transacciones</div>
+            <div class="fin-table-scroll">
+                <table id="tablaFinanzas" class="fin-table">
                     <thead>
                         <tr>
                             <th>Transacción</th>
@@ -310,52 +346,70 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($transacciones as $t)
+                        @forelse($transacciones as $transaccion)
                             @php
-                                $tipo = strtoupper((string) $t->tipo);
-                                $estado = strtoupper((string) $t->estado);
+                                $tipo = strtoupper(trim((string) $transaccion->tipo));
+                                $estado = strtoupper(trim((string) $transaccion->estado));
                             @endphp
-                            <tr class="fin-registro"
-                                data-search="{{ $t->id_transaccion }} {{ $t->id_venta }} {{ $t->id_reserva }}"
-                                data-tipo="{{ $tipo }}" data-estado="{{ $estado }}">
-                                <td><strong>#{{ $t->id_transaccion }}</strong></td>
-                                <td>{{ $t->id_venta ? '#' . $t->id_venta : '—' }}</td>
-                                <td>{{ $t->id_reserva ? '#' . $t->id_reserva : '—' }}</td>
+                            <tr class="fila-finanza" data-transaccion="{{ $transaccion->id_transaccion }}"
+                                data-venta="{{ $transaccion->id_venta ?? '' }}"
+                                data-reserva="{{ $transaccion->id_reserva ?? '' }}" data-tipo="{{ $transaccion->tipo }}"
+                                data-estado="{{ $transaccion->estado }}">
+                                <td><strong>#{{ $transaccion->id_transaccion }}</strong></td>
+                                <td>{{ $transaccion->id_venta ?? '—' }}</td>
+                                <td>{{ $transaccion->id_reserva ?? '—' }}</td>
                                 <td><span
-                                        class="fin-pill {{ $tipo === 'ENGANCHE' ? 'ok' : ($tipo === 'DEVOLUCION' ? 'warn' : '') }}">{{ $tipo }}</span>
+                                        class="fin-pill {{ $tipo === 'PAGO' ? 'blue' : ($tipo === 'ENGANCHE' ? 'green' : ($tipo === 'DEVOLUCION' ? 'amber' : '')) }}">{{ $transaccion->tipo }}</span>
                                 </td>
-                                <td class="fin-num">{{ $tipo === 'DEVOLUCION' ? '− ' : '' }}Q
-                                    {{ number_format(abs((float) $t->monto), 2) }}</td>
+                                <td class="money">{{ $tipo === 'DEVOLUCION' ? '− ' : '' }}Q
+                                    {{ number_format((float) $transaccion->monto, 2) }}</td>
                                 <td><span
-                                        class="fin-pill {{ $estado === 'APROBADA' ? 'ok' : ($estado === 'RECHAZADA' ? 'bad' : 'warn') }}">{{ $estado }}</span>
+                                        class="fin-pill {{ $estado === 'APROBADA' ? 'green' : (in_array($estado, ['RECHAZADA', 'ANULADA']) ? 'red' : 'amber') }}">{{ $transaccion->estado }}</span>
                                 </td>
-                                <td>{{ $t->fecha_transaccion ? \Carbon\Carbon::parse($t->fecha_transaccion)->format('d/m/Y H:i') : '—' }}
+                                <td>{{ $transaccion->fecha_transaccion ?? 'No registrada' }}</td>
+                                <td><a class="fin-action"
+                                        href="{{ route('finanzas.show', $transaccion->id_transaccion) }}">Ver detalle</a>
                                 </td>
-                                <td><a class="fin-btn" href="{{ route('finanzas.show', $t->id_transaccion) }}">Ver
-                                        detalle</a></td>
                             </tr>
-                        @empty <tr>
-                                <td colspan="8">No hay transacciones registradas.</td>
+                        @empty<tr>
+                                <td colspan="8" class="fin-empty">No hay transacciones financieras registradas.</td>
                             </tr>
                         @endforelse
+                        @if ($transacciones->isNotEmpty())
+                            <tr id="sinResultadosFinanzas" style="display:none">
+                                <td colspan="8" class="fin-empty">No se encontraron transacciones con esos filtros.</td>
+                            </tr>
+                        @endif
                     </tbody>
                 </table>
             </div>
         </div>
     </div>
     <script>
-        function finFiltrar() {
-            const q = document.getElementById('finBuscar').value.trim().toLowerCase(),
-                t = document.getElementById('finTipo').value,
-                e = document.getElementById('finEstado').value;
-            let n = 0;
-            document.querySelectorAll('.fin-registro').forEach(r => {
-                let ok = r.dataset.search.toLowerCase().includes(q) && (!t || r.dataset.tipo === t) && (!e || r
-                    .dataset.estado === e);
-                r.style.display = ok ? '' : 'none';
-                if (ok) n++
+        function filtrarFinanzas() {
+            const buscar = document.getElementById('buscarFinanza').value.trim().toLowerCase();
+            const tipo = document.getElementById('filtroTipo').value;
+            const estado = document.getElementById('filtroEstado').value;
+            let visibles = 0;
+            document.querySelectorAll('#tablaFinanzas .fila-finanza').forEach(fila => {
+                const coincideBusqueda = !buscar || [fila.dataset.transaccion, fila.dataset.venta, fila.dataset
+                    .reserva
+                ].some(valor => (valor || '').toLowerCase().includes(buscar));
+                const mostrar = coincideBusqueda && (!tipo || fila.dataset.tipo === tipo) && (!estado || fila
+                    .dataset.estado === estado);
+                fila.style.display = mostrar ? '' : 'none';
+                if (mostrar) visibles++;
             });
-            document.getElementById('finConteo').textContent = 'Mostrando ' + n + ' transacciones';
+            document.getElementById('contadorFinanzas').textContent = 'Mostrando ' + visibles + ' transacciones';
+            const vacio = document.getElementById('sinResultadosFinanzas');
+            if (vacio) vacio.style.display = visibles ? 'none' : '';
+        }
+
+        function limpiarFiltrosFinanzas() {
+            document.getElementById('buscarFinanza').value = '';
+            document.getElementById('filtroTipo').value = '';
+            document.getElementById('filtroEstado').value = '';
+            filtrarFinanzas();
         }
     </script>
 @endsection

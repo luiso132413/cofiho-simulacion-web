@@ -52,4 +52,13 @@ class Reserva extends Model
             'id_usuario'
         );
     }
+
+    public function transacciones()
+{
+    return $this->hasMany(
+        TransaccionFinanciera::class,
+        'id_reserva',
+        'id_reserva'
+    );
+}
 }
