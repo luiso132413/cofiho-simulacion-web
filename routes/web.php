@@ -249,3 +249,26 @@ Route::post('/logout', [AuthController::class, 'logout'])
     ->name('logout');
 
    
+// API pública de prueba - COFIHO V2
+Route::get('/api/vehiculos', function () {
+    $vehiculos = \Illuminate\Support\Facades\DB::connection('oracle')
+        ->table('VEHICULO')
+        ->select(
+            'ID_VEHICULO',
+            'VIN',
+            'ANIO',
+            'COLOR',
+            'CONDICION',
+            'ESTADO',
+            'PRECIO_LISTA'
+        )
+        ->where('ESTADO', 'DISPONIBLE')
+        ->orderBy('ID_VEHICULO')
+        ->get();
+
+    return response()->json([
+        'success' => true,
+        'total' => $vehiculos->count(),
+        'data' => $vehiculos
+    ]);
+});
