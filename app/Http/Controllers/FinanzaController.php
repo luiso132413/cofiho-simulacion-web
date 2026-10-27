@@ -4,39 +4,31 @@ namespace App\Http\Controllers;
 
 use App\Models\TransaccionFinanciera;
 use App\Models\DetalleFinanciero;
+use Illuminate\Support\Facades\DB;
 
 class FinanzaController extends Controller
 {
     public function index()
     {
-        $transacciones = TransaccionFinanciera::query()
-            ->leftJoin('METODO_PAGO as mp', 'TRANSACCION_FINANCIERA.ID_METODO_PAGO', '=', 'mp.ID_METODO_PAGO')
-            ->select('TRANSACCION_FINANCIERA.*', 'mp.NOMBRE as METODO_PAGO_NOMBRE', 'mp.TIPO as METODO_PAGO_TIPO')
-            ->orderBy('TRANSACCION_FINANCIERA.ID_TRANSACCION', 'desc')
-            ->get();
-
+        $transacciones = TransaccionFinanciera::orderBy('id_transaccion', 'desc')->get();
         return view('finanzas.index', compact('transacciones'));
     }
 
     public function show($id)
     {
-        $transaccion = TransaccionFinanciera::query()
-            ->leftJoin('METODO_PAGO as mp', 'TRANSACCION_FINANCIERA.ID_METODO_PAGO', '=', 'mp.ID_METODO_PAGO')
-            ->select('TRANSACCION_FINANCIERA.*', 'mp.NOMBRE as METODO_PAGO_NOMBRE', 'mp.TIPO as METODO_PAGO_TIPO')
-            ->where('TRANSACCION_FINANCIERA.ID_TRANSACCION', $id)
-            ->firstOrFail();
-
-        return view('finanzas.show', compact('transaccion'));
+        $transaccion = TransaccionFinanciera::findOrFail($id);
+        $metodoPago = DB::table('METODO_PAGO')
+            ->where('ID_METODO_PAGO', $transaccion->id_metodo_pago)
+            ->first(['NOMBRE', 'TIPO', 'ACTIVO']);
+        return view('finanzas.show', compact('transaccion', 'metodoPago'));
     }
 
     public function detalles($id)
     {
         $transaccion = TransaccionFinanciera::findOrFail($id);
-
-        $detalles = $transaccion->id_venta === null
-            ? collect()
-            : DetalleFinanciero::where('id_venta', $transaccion->id_venta)->get();
-
+        $detalles = $transaccion->id_venta
+            ? DetalleFinanciero::where('id_venta', $transaccion->id_venta)->get()
+            : collect();
         return view('finanzas.detalles', compact('detalles', 'transaccion'));
     }
 }

@@ -73,7 +73,10 @@ public function reservarFIFO(
     int $idPredio,
     int $idCliente,
     ?int $idUsuario,
-    string $canal
+    string $canal,
+    int $idModelo,
+    int $anio,
+    string $color
 ): array {
     $conexion = DB::connection('oracle');
 
@@ -82,7 +85,10 @@ public function reservarFIFO(
         $idPredio,
         $idCliente,
         $idUsuario,
-        $canal
+        $canal,
+        $idModelo,
+        $anio,
+        $color
     ) {
         $pdo = $conexion->getPdo();
 
@@ -93,7 +99,10 @@ public function reservarFIFO(
                 :usuario,
                 :canal,
                 :vehiculo,
-                :reserva
+                :reserva,
+                :modelo,
+                :anio,
+                :color
             );
         END;";
 
@@ -147,6 +156,10 @@ public function reservarFIFO(
             \PDO::PARAM_INT | \PDO::PARAM_INPUT_OUTPUT,
             40
         );
+
+        $stmt->bindValue(':modelo', $idModelo, \PDO::PARAM_INT);
+        $stmt->bindValue(':anio', $anio, \PDO::PARAM_INT);
+        $stmt->bindValue(':color', trim($color), \PDO::PARAM_STR);
 
         $stmt->execute();
 
